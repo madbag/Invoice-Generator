@@ -6,7 +6,7 @@ import authRoutes from "./routes/authRoutes";
 
 // loading env variables
 dotenv.config();
-const app: Application = express();
+export const app: Application = express();
 const PORT = process.env.PORT || 5000;
 const MONGO = process.env.MONGO_URI || "";
 
@@ -29,6 +29,10 @@ app.get("/", (req: Request, res: Response) => {
 
 //routes
 app.use("/api/auth", authRoutes);
+
+app.use(cors({
+  origin: "http://localhost:5173", 
+}))
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
