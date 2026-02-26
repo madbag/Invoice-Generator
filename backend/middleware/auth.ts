@@ -1,3 +1,6 @@
+// Runs before controllers for security/validation
+// JWT TOKEN CHECK/ ROLE-BASED ACCESS CONTROL
+
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";

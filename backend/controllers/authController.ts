@@ -1,3 +1,6 @@
+//Handles API request and responses
+// LOGIN, REGISTER, PASSWORD HASHING, TOKEN GENERATION
+
 import { Request, Response } from "express";
 import User from "../models/User";
 import bcrypt from "bcryptjs";
@@ -27,12 +30,16 @@ export const register = async (req: Request, res: Response) => {
       password: hashedPassword,
     });
 
+    await newUser.save();
+    console.log(`User ${newUser.firstName} ${newUser.lastName} saved successfully with id ${newUser._id}`);
+    // res.status(201).json({  });
+
     //create a token so they stay logged in even tho the page is refreshed
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!, {
       expiresIn: "1h",
     });
 
-    res.status(201).json({ result: newUser, token });
+    res.status(201).json({ message: "User registered successfully",result: newUser, token });
   } catch (err) {
     res.status(500).json({ message: "Cannot register the user" });
   }

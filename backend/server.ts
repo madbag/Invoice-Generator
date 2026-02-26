@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
+import { errorHandler } from "./middleware/errorMiddleware";
 
 // loading env variables
 dotenv.config();
@@ -29,7 +30,6 @@ app.get("/", (req: Request, res: Response) => {
 
 //routes
 app.use("/api/auth", authRoutes);
-
 app.use(cors({
   origin: "http://localhost:5173", 
 }))
@@ -37,3 +37,4 @@ app.use(cors({
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+app.use(errorHandler)

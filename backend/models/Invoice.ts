@@ -1,3 +1,6 @@
+// Database structure
+// INVOICE SCHEMA - ITEMS, TOTAL, STATUS, DUE DATE
+
 import mongoose, { Schema } from "mongoose";
 
 const InvoiceSchema = new Schema(

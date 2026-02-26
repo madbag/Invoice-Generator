@@ -1,3 +1,6 @@
+// Database structure
+// USER SCHEMA - BASIC INFO, BUSINESS DETAILS
+
 import mongoose, {Schema} from "mongoose";      
 
 const UserSchema = new Schema({

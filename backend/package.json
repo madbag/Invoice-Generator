@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch './**/*.ts' --exec 'ts-node' server.ts",
+    "dev": "nodemon --watch './**/*.ts' server.ts",
     "test": "jest --watchAll --detectOpenHandles"
   },
   "keywords": [],
