@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getProfile, updateProfile, deleteProfile } from "../../api";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
 
 interface ProfileData {
   firstName: string;
@@ -10,6 +11,7 @@ interface ProfileData {
 }
 
 const Profile: React.FC = () => {
+  const { token } = useAuth();
   const [formData, setFormData] = useState<ProfileData>({
     firstName: "",
     lastName: "",
@@ -21,22 +23,19 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      if (!token) return;
       try {
         const { data } = await getProfile();
         console.log("Fetched profile:", data); // debug here
-        setFormData({
-          firstName: data.firstName || "",
-          lastName: data.lastName || "",
-          email: data.email || "",
-          password: "", // password is not returned for security
-        });
+
+        setFormData(data);
       } catch (error) {
         console.error("Error fetching profile", error);
       }
     };
 
     fetchProfile();
-  }, []);
+  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -56,7 +55,9 @@ const Profile: React.FC = () => {
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete your account?"))
       return;
-
+    
+    // console.log("Token for delete:", JSON.parse(localStorage.getItem("profile") || "{}").token);
+    
     try {
       await deleteProfile();
       localStorage.removeItem("profile");

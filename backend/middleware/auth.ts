@@ -4,14 +4,15 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
+import User from "../models/User";
 
 
 // the ? mark means the property as optional/possibly undefined for code safety
 export interface AuthRequest extends Request {
-  userId?: string;
+  user?: any;
 }
 
-const auth = (req: AuthRequest, res: Response, next: NextFunction) => {
+const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     //get the token from the header
     // the ?. ensures that the authorization wont crash if the header is missing.
@@ -24,7 +25,10 @@ const auth = (req: AuthRequest, res: Response, next: NextFunction) => {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
     
     //attach the user Id to the request object 
-    req.userId = decoded?.id;
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    req.user = user; // attach full user object
 
     //move to next function
     next();
@@ -32,5 +36,7 @@ const auth = (req: AuthRequest, res: Response, next: NextFunction) => {
     res.status(401).json({ message: "Invalid token" });
   }
 };
+
+
 
 export default auth;

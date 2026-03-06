@@ -1,145 +1,139 @@
-import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useContext, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { InvoiceContext } from "../../context/InvoiceContext";
 
-type Item = {
-  description: string;
-  quantity: number;
-  cost: number;
-};
+export default function InvoicePreview() {
+  const navigate = useNavigate();
+  const invoiceContext = useContext(InvoiceContext);
+  const { token } = useAuth();
+  const [message, setMessage] = useState("");
 
-interface InvoicePreviewProps {
-  invoiceNo: string;
-  form: {
-    clientName: string;
-    clientAddress: string;
-    clientEmail: string;
-    contactNumber: number;
-    invoiceDate: string;
-    emailMessage?: string; // optional message to send
-  };
-  items: Item[];
-  onClose: () => void;
-}
+  if (!invoiceContext) return <p>No invoice data found.</p>;
 
-export default function InvoicePreview({
-  invoiceNo,
-  form,
-  items,
-  onClose,
-}: InvoicePreviewProps) {
-  const [loading, setLoading] = useState(false);
-  const total = items.reduce((sum, item) => sum + item.quantity * item.cost, 0);
+  const { invoiceNo, form, items, total } = invoiceContext;
+  // console.log("TOKEN SENT TO BACKEND:", token);
 
-  const handleSaveAndSend = async () => {
-    setLoading(true);
+  const handleConfirm = async () => {
+    console.log("SENDING:", {
+      invoiceNo,
+      clientName: form.clientName,
+      clientEmail: form.clientEmail,
+      invoiceDate: form.invoiceDate,
+      items,
+      total,
+    });
+
     try {
-      const total = items.reduce(
-        (sum, item) => sum + item.quantity * item.cost,
-        0,
+      await axios.post(
+        "http://localhost:5000/api/invoices",
+        {
+          invoiceNo,
+          clientName: form.clientName,
+          clientEmail: form.clientEmail,
+          invoiceDate: form.invoiceDate,
+          items,
+          total,
+          status: "pending",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
-      // 1️⃣ Save invoice first
-      const saveResponse = await fetch("http://localhost:5000/api/invoices", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invoiceNo, form, items, total }),
+      await axios.post(
+        "http://localhost:5000/api/clients",
+        {
+          clientName: form.clientName,
+          clientEmail: form.clientEmail,
+          clientAddress: form.clientAddress,
+          contactNumber: form.contactNumber,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      setMessage("Invoice saved & sent to " + form.clientEmail + "!");
+
+      localStorage.removeItem("invoice");
+
+      invoiceContext.setInvoiceData({
+        invoiceNo: "",
+        form: {
+          clientName: "",
+          clientAddress: "",
+          clientEmail: "",
+          contactNumber: "",
+          invoiceDate: "",
+        },
+        items: [{ description: "", quantity: 1, cost: 0 }],
+        total: 0,
       });
 
-      if (!saveResponse.ok) throw new Error("Failed to save invoice");
-
-      // 2️⃣ Attempt to send email
-      try {
-        const emailResponse = await fetch(
-          "http://localhost:5000/api/send-invoice",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              invoiceNo,
-              clientEmail: form.clientEmail,
-              message: form.emailMessage || "Here is your invoice.",
-              items,
-              total,
-            }),
-          },
-        );
-
-        if (!emailResponse.ok) throw new Error("Failed to send email");
-
-        alert("Invoice saved and sent successfully!");
-      } catch (emailErr) {
-        console.error(emailErr);
-        alert("Invoice saved, but failed to send email.");
-      }
-
-      onClose(); // optionally close the modal
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save invoice.");
-    } finally {
-      setLoading(false);
+      setTimeout(() => {
+        navigate("/dashboard/invoice-list");
+      }, 3000);
+    } catch (error: any) {
+      console.error("Full error:", error.response?.data);
+      setMessage("Error saving invoice. Please try again.");
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // goes back to previous page
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded p-6 w-full max-w-2xl relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-red-500 font-bold"
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Invoice Preview</h1>
+
+      <p>
+        <strong>Invoice No:</strong> {invoiceNo}
+      </p>
+      <p>
+        <strong>Client:</strong> {form.clientName}
+      </p>
+      <p>
+        <strong>Email:</strong> {form.clientEmail}
+      </p>
+      <p>
+        <strong>Date:</strong> {form.invoiceDate}
+      </p>
+
+      <h2 className="mt-4 font-semibold">Items</h2>
+      {items.map((item, index) => (
+        <div key={index}>
+          {item.description} — {item.quantity} × €{item.cost}
+        </div>
+      ))}
+
+      <h2 className="text-xl mt-4 font-bold">Total: € {total}</h2>
+
+      {message && (
+        <div
+          className={`mt-4 p-2 rounded ${message.includes("Error") ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}
         >
-          ✕
+          {message}
+        </div>
+      )}
+
+      <div className="mt-6 flex gap-4">
+        <button
+          onClick={handleBack}
+          className="bg-gray-400 text-white px-4 py-2 rounded"
+        >
+          Back
         </button>
 
-        <h1 className="text-2xl font-bold mb-4">Invoice Preview</h1>
-        <p>
-          <strong>Invoice No:</strong> {invoiceNo}
-        </p>
-        <p>
-          <strong>Date:</strong> {form.invoiceDate}
-        </p>
-        <p>
-          <strong>Client:</strong> {form.clientName}
-        </p>
-        <p>
-          <strong>Address:</strong> {form.clientAddress}
-        </p>
-        <p>
-          <strong>Email:</strong> {form.clientEmail}
-        </p>
-        <p>
-          <strong>Contact:</strong> {form.contactNumber}
-        </p>
-
-        <table className="w-full border-collapse mt-4">
-          <thead className="bg-gray-200">
-            <tr>
-              <th>Description</th>
-              <th>Qty</th>
-              <th>Cost</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, idx) => (
-              <tr key={idx} className="border-t">
-                <td>{item.description}</td>
-                <td>{item.quantity}</td>
-                <td>€ {item.cost}</td>
-                <td>€ {item.quantity * item.cost}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <h2 className="text-xl font-semibold mt-4">Grand Total: € {total}</h2>
-
-        {/* Buttons */}
         <button
-          onClick={handleSaveAndSend}
-          disabled={loading}
-          className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:opacity-50"
+          onClick={handleConfirm}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
         >
-          Save & Send Invoice
+          Confirm
         </button>
       </div>
     </div>

@@ -11,10 +11,10 @@ const Sidebar = () => {
             <Link to="/dashboard">Dashboard</Link>
           </li>
           <li>
-            <Link to="/clients">Clients</Link>
+            <Link to="/dashboard/clients">Clients</Link>
           </li>
           <li>
-            <Link to="/invoices">Invoices</Link>
+            <Link to="/dashboard/invoice-list">Invoices</Link>
           </li>
         </ul>
       </nav>

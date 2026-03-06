@@ -7,6 +7,9 @@ import Dashboard from "./pages/Dashboard.tsx";
 import CreateInvoice from "./components/Invoices/InvoiceForm.tsx";
 import DashboardHome from "./components/Dashboard/DashboardHome.tsx";
 import Profile from "./components/Profile/Profile.tsx";
+import InvoicePreview from "./components/Invoices/InvoicePreview.tsx";
+import InvoiceList from "./components/Invoices/InvoiceList.tsx";
+import ClientList from "./components/Clients/ClientList.tsx";
 
 function App() {
   const { user } = useAuth();
@@ -31,10 +34,13 @@ function App() {
           element={user ? <Dashboard /> : <Navigate to="/signin" replace />}
         >
           <Route index element={<DashboardHome />} />
-          {/* <Route path="clients" element={<Clients />} />
-          <Route path="invoices" element={<Invoices />} /> */}
+
           <Route path="create-invoice" element={<CreateInvoice />} />
+          <Route path="invoice-preview" element={<InvoicePreview />} />
+          <Route path="invoice-list" element={<InvoiceList />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="clients" element={<ClientList />} />
+
         </Route>
         <Route path="*" element={<Navigate to="/signin" />} />
       </Routes>

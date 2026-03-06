@@ -1,4 +1,4 @@
-// Database structure 
+// Database structure
 // CLIENT SCHEMA
 
 import mongoose, { Schema } from "mongoose";
@@ -7,12 +7,11 @@ const ClientSchema = new Schema(
   {
     //not all the freelancers can access the client details.
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
-    email: { type: String, required: true, trim: true, lowercase: true },
-    address: String,
-    contact: String,
-    totalBilled: { type: Number, default: 0 },
+    clientName: { type: String, required: true, trim: true },
+    clientEmail: { type: String, required: true, trim: true, lowercase: true },
+    clientAddress: String,
+    contactNumber: String,
+    // invoices: [{ type: Schema.Types.ObjectId, ref: "Invoice" }],
   },
   { timestamps: true },
 );

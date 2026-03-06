@@ -5,8 +5,7 @@ import { Request, Response } from "express";
 import User from "../models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import type { JwtPayload } from "jsonwebtoken";
-
+import { AuthRequest } from "../middleware/auth";
 
 //REGISTER FUNCTION
 export const register = async (req: Request, res: Response) => {
@@ -31,20 +30,25 @@ export const register = async (req: Request, res: Response) => {
     });
 
     await newUser.save();
-    console.log(`User ${newUser.firstName} ${newUser.lastName} saved successfully with id ${newUser._id}`);
+    console.log(
+      `User ${newUser.firstName} ${newUser.lastName} saved successfully with id ${newUser._id}`,
+    );
     // res.status(201).json({  });
 
     //create a token so they stay logged in even tho the page is refreshed
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!, {
-      expiresIn: "1h",
+      expiresIn: "7d",
     });
 
-    res.status(201).json({ message: "User registered successfully",result: newUser, token });
+    res.status(201).json({
+      message: "User registered successfully",
+      result: newUser,
+      token,
+    });
   } catch (err) {
     res.status(500).json({ message: "Cannot register the user" });
   }
 };
-
 
 //LOGIN FUNCTION
 export const login = async (req: Request, res: Response) => {
@@ -76,5 +80,54 @@ export const login = async (req: Request, res: Response) => {
     res.status(200).json({ result: existingUser, token });
   } catch (err) {
     res.status(500).json({ message: "Cannot log in the user" });
+  }
+};
+
+// GET PROFILE
+export const getProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch profile" });
+  }
+};
+
+// UPDATE PROFILE
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const { firstName, lastName, email } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user,
+      { firstName, lastName, email },
+      { new: true },
+    ).select("-password");
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: "Profile update failed" });
+  }
+};
+
+// DELETE PROFILE
+export const deleteProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    await User.findByIdAndDelete(req.user._id);
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Delete failed" });
   }
 };

@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
+import invoiceRoutes from "./routes/invoiceRoutes";
+import clientRoutes from "./routes/clientRoutes";
 import { errorHandler } from "./middleware/errorMiddleware";
 
 // loading env variables
@@ -30,11 +32,16 @@ app.get("/", (req: Request, res: Response) => {
 
 //routes
 app.use("/api/auth", authRoutes);
-app.use(cors({
-  origin: "http://localhost:5173", 
-}))
+app.use("/api/invoices", invoiceRoutes);
+app.use("/api/clients", clientRoutes);
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  }),
+);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-app.use(errorHandler)
+app.use(errorHandler);

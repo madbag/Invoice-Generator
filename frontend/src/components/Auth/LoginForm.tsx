@@ -6,13 +6,13 @@ import { useAuth } from "../../context/AuthContext.tsx";
 const SignIn: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const { signIn: authSignIn } = useAuth();
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -36,11 +36,18 @@ const SignIn: React.FC = () => {
       const { data } = await signIn(formData);
 
       authSignIn(data);
+      // console.log("Stored profile:", localStorage.getItem("profile"));
       navigate("/dashboard");
       console.log("Logged in successfully:", data);
-    } catch (err) {
+    } catch (err:any) {
+    if (err.response?.status === 404) {
+      setError("This user does not exist");
+    } else if (err.response?.data?.message) {
+      setError(err.response.data.message);
+    } else {
       setError("An error occurred during sign in");
     }
+  }
   };
 
   return (

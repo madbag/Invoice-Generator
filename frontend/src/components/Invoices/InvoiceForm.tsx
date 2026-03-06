@@ -1,12 +1,9 @@
-import { useState, useRef } from "react";
-import InvoicePreview from "./InvoicePreview";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-type Item = {
-  description: string;
-  quantity: number;
-  cost: number;
-};
+import { InvoiceContext } from "../../context/InvoiceContext";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
+import { useClients } from "../../context/ClientContext";
 
 type FieldErrors = {
   clientName?: string;
@@ -20,106 +17,132 @@ type FieldErrors = {
 };
 
 export default function CreateInvoice() {
+  
+  const invoiceContext = useContext(InvoiceContext)!;
+  const { form, items, invoiceNo, setInvoiceData } = invoiceContext;
+  const { token } = useAuth();
   const navigate = useNavigate();
-  const invoiceCounter = useRef(1);
-
-  // const [invoiceNo] = useState(`INV-${Date.now()}`);
-  const [invoiceNo, setInvoiceNo] = useState(
-    formatInvoiceNo(invoiceCounter.current),
-  );
 
   const [errors, setErrors] = useState<FieldErrors>({});
-
-  const [showPreview, setShowPreview] = useState(false);
-
-  const [form, setForm] = useState({
-    clientName: "",
-    clientAddress: "",
-    clientEmail: "",
-    contactNumber: "",
-    invoiceDate: "",
-  });
-
-  const [items, setItems] = useState<Item[]>([
-    { description: "", quantity: 1, cost: 0 },
-  ]);
-
-  function formatInvoiceNo(counter: number) {
-    return `INV-${counter.toString().padStart(3, "0")}`;
-  }
-
-  // Handle Client Form Change
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  // Load saved invoice from localStorage on mount
+  const { clients } = useClients();
+  
+  const handleSelectClient = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = clients.find((c) => c._id === e.target.value);
+    if (selected) {
+      setInvoiceData({
+        form: {
+          clientName: selected.clientName,
+          clientEmail: selected.clientEmail,
+          clientAddress: selected.clientAddress,
+          contactNumber: selected.contactNumber,
+          invoiceDate: form.invoiceDate,
+        },
+      });
+    }
   };
 
-  // Handle Item Change
+  useEffect(() => {
+    if (!token) return;
+
+    const generateInvoiceNo = async () => {
+      
+      try {
+        const res = await axios.get("http://localhost:5000/api/invoices", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // console.log("INVOICES FROM DB:", res.data)
+
+        const invoices = res.data;
+        const numbers = invoices
+          .map((inv: any) => parseInt(inv.invoiceNo?.split("-")[1]))
+          .filter((n: number) => !isNaN(n) && isFinite(n));
+
+        if (numbers.length === 0) {
+          setInvoiceData({ invoiceNo: "INV-001" });
+          return;
+        }
+        const highest = Math.max(...numbers);
+        setInvoiceData({
+          invoiceNo: `INV-${String(highest + 1).padStart(3, "0")}`,
+        });
+      } catch (err) {
+        console.error("Failed to generate invoice number", err);
+      }
+    };
+
+    const saved = localStorage.getItem("invoice");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setInvoiceData(parsed);
+      if (!parsed.invoiceNo) generateInvoiceNo();
+    } else {
+      generateInvoiceNo();
+    }
+  }, [token]);
+
+  // Persist invoice to localStorage whenever it changes
+  useEffect(() => {
+    if (!invoiceNo) return;
+    localStorage.setItem(
+      "invoice",
+      JSON.stringify({ invoiceNo, form, items, total: calculateTotal() }),
+    );
+  }, [form, items, invoiceNo]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInvoiceData({ form: { ...form, [e.target.name]: e.target.value } });
+  };
+
   const handleItemChange = (
     index: number,
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const { name, value } = e.target;
-
     const updatedItems = [...items];
-
     updatedItems[index] = {
       ...updatedItems[index],
-      [name]: name === "quantity" || name === "cost" ? Number(value) : value,
+      [e.target.name]:
+        e.target.name === "quantity" || e.target.name === "cost"
+          ? Number(e.target.value)
+          : e.target.value,
     };
-
-    setItems(updatedItems);
-  };
-  // Add New Item
-  const addItem = () => {
-    setItems([...items, { description: "", quantity: 1, cost: 0 }]);
+    setInvoiceData({ items: updatedItems });
   };
 
-  // Calculate Total
-  const calculateTotal = () => {
-    return items.reduce((total, item) => {
-      return total + item.quantity * item.cost;
-    }, 0);
-  };
+  const addItem = () =>
+    setInvoiceData({
+      items: [...items, { description: "", quantity: 1, cost: 0 }],
+    });
+  const removeItem = (index: number) =>
+    setInvoiceData({ items: items.filter((_, i) => i !== index) });
 
+  const calculateTotal = () =>
+    items.reduce((sum, i) => sum + i.quantity * i.cost, 0);
 
-  // Enhanced validation
   const validateForm = () => {
     const newErrors: FieldErrors = { items: {} };
-
-    // Client fields
     if (!form.clientName.trim())
       newErrors.clientName = "Client Name is required";
     if (!form.clientAddress.trim())
       newErrors.clientAddress = "Client Address is required";
     if (!form.clientEmail.trim() || !form.clientEmail.includes("@"))
-      newErrors.clientEmail = "Enter a valid email with @";
+      newErrors.clientEmail = "Valid email required";
     if (!form.contactNumber.trim() || isNaN(Number(form.contactNumber)))
-      newErrors.contactNumber = "Contact Number must be a number";
-    if (!form.invoiceDate) newErrors.invoiceDate = "Invoice Date is required";
+      newErrors.contactNumber = "Contact number invalid";
+    if (!form.invoiceDate) newErrors.invoiceDate = "Invoice date required";
 
-    // Items
     items.forEach((item, index) => {
       newErrors.items![index] = {};
       if (!item.description.trim())
-        newErrors.items![index].description = "Description required";
-      if (item.quantity <= 0)
-        newErrors.items![index].quantity = "Quantity must be greater than 0";
-      if (item.cost <= 0)
-        newErrors.items![index].cost = "Cost must be greater than 0";
-
-      // Remove empty object if no errors for this item
-      if (
-        !newErrors.items![index].description &&
-        !newErrors.items![index].quantity &&
-        !newErrors.items![index].cost
-      ) {
+        newErrors.items![index].description = "Required";
+      if (item.quantity <= 0) newErrors.items![index].quantity = "Required";
+      if (item.cost <= 0) newErrors.items![index].cost = "Required";
+      if (Object.keys(newErrors.items![index]).length === 0)
         delete newErrors.items![index];
-      }
     });
 
     setErrors(newErrors);
-
-    // Return true if no errors
     return (
       Object.keys(newErrors).length === 1 &&
       Object.keys(newErrors.items!).length === 0
@@ -127,107 +150,99 @@ export default function CreateInvoice() {
   };
 
   const handleSave = () => {
-    const isValid = validateForm();
-
-    if (!isValid) {
-      return;
-    }
-
-    // clear errors
-    setErrors({});
-
-    // Open preview modal
-    setShowPreview(true);
-
-    invoiceCounter.current += 1;
-    setInvoiceNo(formatInvoiceNo(invoiceCounter.current));
-  };
-
-  const removeItem = (index: number) => {
-    if (items.length === 1) return; // prevent removing last row
-
-    const updatedItems = items.filter((_, i) => i !== index);
-    setItems(updatedItems);
+    if (!validateForm()) return;
+    setInvoiceData({ total: calculateTotal(), invoiceNo });
+    navigate("/dashboard/invoice-preview");
   };
 
   const handleCancel = () => {
-  // Reset form
-  setForm({
-    clientName: "",
-    clientAddress: "",
-    clientEmail: "",
-    contactNumber: "",
-    invoiceDate: "",
-  });
+    // Clear context and localStorage
+    setInvoiceData({
+      invoiceNo: "",
+      form: {
+        clientName: "",
+        clientAddress: "",
+        clientEmail: "",
+        contactNumber: "",
+        invoiceDate: "",
+      },
+      items: [{ description: "", quantity: 1, cost: 0 }],
+      total: 0,
+    });
+    localStorage.removeItem("invoice");
+    navigate("/dashboard");
+  };
 
-  // Reset items
-  setItems([{ description: "", quantity: 1, cost: 0 }]);
-
-  // Clear errors
-  setErrors({});
-
-  // Hide preview if open
-  setShowPreview(false);
-
-  // Navigate back to dashboard
-  navigate("/dashboard"); // replace "/dashboard" with your actual dashboard route
-};
   return (
-    <div className="invoice-container w-full flex flex-col items-center justify-center  bg-gray-100">
+    <div className="invoice-container w-full flex flex-col items-center justify-center bg-gray-100">
       <div className="invoice-form flex flex-col gap-4 bg-white p-6 rounded shadow-md w-full max-w-3xl">
         <h1 className="text-2xl font-bold">Create Invoice</h1>
+        <select
+          onChange={handleSelectClient}
+          className="border p-2 rounded w-full mb-4"
+        >
+          <option value="">
+            -- Select existing client or fill manually --
+          </option>
+          {clients.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.clientName} ({c.clientEmail})
+            </option>
+          ))}
+        </select>
+
         <div className="grid grid-cols-4 gap-3">
           <label className="font-medium text-sm self-center">
             Client Name:
           </label>
           <input
             name="clientName"
+            value={form.clientName}
             placeholder="Client Name"
             onChange={handleChange}
             className={`border p-2 rounded ${errors.clientName ? "border-red-500" : ""}`}
           />
-
           <label className="font-medium text-sm self-center">
             Client Address:
           </label>
           <input
             name="clientAddress"
+            value={form.clientAddress}
             placeholder="Client Address"
             onChange={handleChange}
             className="border p-2 rounded"
           />
-
           <label className="font-medium text-sm self-center">
             Client Email:
           </label>
           <input
             name="clientEmail"
+            value={form.clientEmail}
             placeholder="Client Email"
             onChange={handleChange}
             className={`border p-2 rounded ${errors.clientEmail ? "border-red-500" : ""}`}
           />
-
           <label className="font-medium text-sm self-center">
             Contact Number:
           </label>
           <input
-            type="tel"
             name="contactNumber"
+            type="tel"
+            value={form.contactNumber}
             placeholder="Contact Number"
             onChange={handleChange}
             className="border p-2 rounded"
           />
-
           <label className="font-medium text-sm self-center">
             Invoice Date:
           </label>
           <input
-            type="date"
             name="invoiceDate"
+            type="date"
+            value={form.invoiceDate}
             onChange={handleChange}
             className="border p-2 rounded"
           />
-
           <label className="font-medium text-sm self-center">Invoice No:</label>
           <input
             value={invoiceNo}
@@ -247,43 +262,37 @@ export default function CreateInvoice() {
               <th>Action</th>
             </tr>
           </thead>
-
           <tbody>
-            {items.map((item, index) => (
-              <tr key={index}>
+            {items.map((item, idx) => (
+              <tr key={idx}>
                 <td>
                   <input
                     name="description"
                     value={item.description}
-                    onChange={(e) => handleItemChange(index, e)}
-                    className={`border p-2 rounded ${
-                      errors.items?.[index]?.description ? "border-red-500" : ""
-                    }`}
+                    onChange={(e) => handleItemChange(idx, e)}
+                    className={`border p-2 rounded ${errors.items?.[idx]?.description ? "border-red-500" : ""}`}
                   />
                 </td>
-
                 <td>
                   <input
                     type="number"
                     name="quantity"
                     value={item.quantity}
-                    onChange={(e) => handleItemChange(index, e)}
+                    onChange={(e) => handleItemChange(idx, e)}
                   />
                 </td>
-
                 <td>
                   <input
                     type="number"
                     name="cost"
                     value={item.cost}
-                    onChange={(e) => handleItemChange(index, e)}
+                    onChange={(e) => handleItemChange(idx, e)}
                   />
                 </td>
-
                 <td>{item.quantity * item.cost}</td>
                 <td>
                   <button
-                    onClick={() => removeItem(index)}
+                    onClick={() => removeItem(idx)}
                     className="text-red-500 hover:text-red-700"
                     disabled={items.length === 1}
                   >
@@ -294,41 +303,32 @@ export default function CreateInvoice() {
             ))}
           </tbody>
         </table>
-        <div className="flex justify-start mt-2 mb-2">
-        <button onClick={addItem} className="border border-blue-500 text-blue-500 hover:bg-blue-100 rounded px-3 py-1 mt-2 flex">
+        <button
+          onClick={addItem}
+          className="border border-blue-500 text-blue-500 hover:bg-blue-100 rounded px-3 py-1 mt-2"
+        >
           + Add Item
         </button>
-        </div>
 
-        {/* Grand Total */}
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-semibold mt-4">
           Grand Total: € {calculateTotal()}
         </h2>
 
-        {/* Action Buttons */}
-        <div className="actions gap-3 flex flex-row justify-start">
+        <div className="actions gap-3 flex flex-row justify-start mt-4">
           <button
             onClick={handleSave}
-            
             className="primary-btn rounded-2xl border px-3"
           >
             Save to Preview
           </button>
-          <button onClick={handleCancel} className="secondary-btn rounded-2xl border px-3">
+          <button
+            onClick={handleCancel}
+            className="secondary-btn rounded-2xl border px-3"
+          >
             Cancel
           </button>
         </div>
       </div>
-
-      {/* <-- Put the modal here, outside the form but still inside container --> */}
-      {showPreview && (
-        <InvoicePreview
-          invoiceNo={invoiceNo}
-          form={{ ...form, contactNumber: Number(form.contactNumber) }}
-          items={items}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
     </div>
   );
 }

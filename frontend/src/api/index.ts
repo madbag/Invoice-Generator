@@ -25,7 +25,7 @@ const API = axios.create({
 API.interceptors.request.use((req) => {
   const profile = localStorage.getItem("profile");
 
-  if (profile) {
+  if (profile && req.headers) {
     req.headers.Authorization = `Bearer ${JSON.parse(profile).token}`;
   }
   return req;
@@ -35,10 +35,11 @@ API.interceptors.request.use((req) => {
 export const signIn = (formData: AuthFormData) =>
   API.post("/auth/login", formData);
 export const signUp = (formData: any) => API.post("/auth/register", formData);
+
 export const getProfile = () => API.get("/auth/profile");
 export const updateProfile = (data: any) => API.put("/auth/profile", data);
 export const deleteProfile = () => API.delete("/auth/profile");
 
-export const fetchInvoices = () => API.get("/invoices");
-export const createInvoice = (invoiceData: any) =>
-  API.post("/invoices", invoiceData);
+// export const fetchInvoices = () => API.get("/invoices");
+// export const createInvoice = (invoiceData: any) =>
+  // API.post("/invoices", invoiceData);

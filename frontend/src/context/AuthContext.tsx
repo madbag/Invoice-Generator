@@ -14,42 +14,59 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   signIn: (data: any) => void;
   signOut: () => void;
   register: (data: any) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const profile = localStorage.getItem("profile");
-    if (profile) {
-      setUser(JSON.parse(profile));
-    }
-    setLoading(false);
-  }, []);
-
   const signIn = (data: any) => {
-    localStorage.setItem("profile", JSON.stringify(data.result));
-    setUser(data.result);
+    const authData = {
+      user: data.result,
+      token: data.token,
+    };
+
+    setToken(authData.token);
+    setUser(authData.user);
+
+    localStorage.setItem(
+      "auth",
+      JSON.stringify({ user: data.result, token: data.token }),
+    );
   };
 
   const register = (data: any) => {
-    localStorage.setItem("profile", JSON.stringify(data.result));
+    localStorage.setItem("auth", JSON.stringify(data.result));
     setUser(data.result);
   };
 
   const signOut = () => {
-    localStorage.removeItem("profile");
+    localStorage.removeItem("auth");
     setUser(null);
+    setToken(null);
   };
 
+  useEffect(() => {
+    const stored = localStorage.getItem("auth");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setUser(parsed.user);
+      setToken(parsed.token);
+    }
+    setLoading(false);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, signIn, signOut, register }}>
+    <AuthContext.Provider value={{ user, token, signIn, signOut, register }}>
       {!loading && children}
     </AuthContext.Provider>
   );

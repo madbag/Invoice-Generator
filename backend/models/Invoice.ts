@@ -1,28 +1,21 @@
-// Database structure
-// INVOICE SCHEMA - ITEMS, TOTAL, STATUS, DUE DATE
+import { Schema, model } from "mongoose";
 
-import mongoose, { Schema } from "mongoose";
-
-const InvoiceSchema = new Schema(
+const invoiceSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    clientId: { type: Schema.Types.ObjectId, ref: "Client", required: true },
-    invoiceNumber: { type: String, required: true, unique: true },
-    items: [
-      {
-        description: { type: String, required: true },
-        price: { type: Number, required: true },
-      },
-    ],
-    totalAmount: { type: Number, required: true },
+    invoiceNo: { type: String, required: true },
+    clientName: { type: String, required: true },
+    clientEmail: { type: String, required: true },
+    invoiceDate: { type: String, required: true },
+    items: { type: Array, required: true },
+    total: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["Paid", "Draft", "Overdue", "Sent"],
-      default: "Draft",
+      enum: ["pending", "paid", "overdue"],
+      default: "pending",
     },
-    dueDate: { type: Date, required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true },
 );
 
-export default mongoose.model("Invoice", InvoiceSchema);
+export default model("Invoice", invoiceSchema);
