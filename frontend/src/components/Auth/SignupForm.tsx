@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { signUp } from "../../api/index.ts";
-import { useAuth } from "../../context/AuthContext.tsx";
+// import { useAuth } from "../../context/AuthContext.tsx";
 
 interface SignUpFormData {
   firstName: string;
@@ -20,7 +20,7 @@ const SignUp: React.FC = () => {
     confirmPassword: "",
   });
   const navigate = useNavigate();
-  const { register } = useAuth();
+  // const { register } = useAuth();
 
   const [error, setError] = useState<string | null>(null);
 

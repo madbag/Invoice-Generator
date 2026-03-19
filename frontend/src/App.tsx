@@ -40,7 +40,6 @@ function App() {
           <Route path="invoice-list" element={<InvoiceList />} />
           <Route path="profile" element={<Profile />} />
           <Route path="clients" element={<ClientList />} />
-
         </Route>
         <Route path="*" element={<Navigate to="/signin" />} />
       </Routes>

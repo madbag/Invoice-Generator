@@ -6,10 +6,10 @@ const DashboardHome = () => {
     <div className="dashboard-home ">
       <div className="flex flex-col p-6 bg-white rounded shadow">
         <GreetingCard />
-        <div className="mt-6">
+        {/* <div className="mt-6">
           <p>My invoices</p>
           <p>Monthly Summary</p>
-        </div>
+        </div> */}
       </div>
     </div>
   );

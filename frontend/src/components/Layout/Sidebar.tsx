@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 
 const Sidebar = () => {
   return (
-    <aside className="w-64 bg-gray-800 text-white h-screen p-4">
-      <h2 className="text-xl font-bold mb-6">Invoice Generator</h2>
+    <aside className="w-64 bg-black text-white h-screen p-4">
+      <h2 className="text-xl font-bold mb-6"><Link to="/dashboard">Invoice Generator</Link></h2>
       <nav>
         <ul>
           <li>

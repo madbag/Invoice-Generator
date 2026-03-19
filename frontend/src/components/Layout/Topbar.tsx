@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import Search from "../Search/Search";
 
 
 const Topbar = () => {
@@ -17,7 +18,7 @@ const Topbar = () => {
 
   return (
     <header className="w-full bg-white shadow p-4 flex justify-between items-center">
-      <h1 className="text-xl font-semibold">SEARCH FEATURE</h1>
+      <h1 className="text-xl font-semibold"><Search/></h1>
       <div className="flex items-center gap-4">
         <span
           onClick={handleProfileClick}
