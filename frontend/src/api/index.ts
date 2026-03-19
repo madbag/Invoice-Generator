@@ -40,6 +40,3 @@ export const getProfile = () => API.get("/auth/profile");
 export const updateProfile = (data: any) => API.put("/auth/profile", data);
 export const deleteProfile = () => API.delete("/auth/profile");
 
-// export const fetchInvoices = () => API.get("/invoices");
-// export const createInvoice = (invoiceData: any) =>
-  // API.post("/invoices", invoiceData);

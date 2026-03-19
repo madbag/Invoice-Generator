@@ -30,7 +30,7 @@ const SignIn: React.FC = () => {
       return;
     }
 
-    // console.log("Sign In Data:", formData);
+    console.log("Sign In Data:", formData);
 
     try {
       const { data } = await signIn(formData);

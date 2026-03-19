@@ -1,32 +1,47 @@
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useContext, useState } from "react";
+import { useContext, useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { InvoiceContext } from "../../context/InvoiceContext";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function InvoicePreview() {
   const navigate = useNavigate();
   const invoiceContext = useContext(InvoiceContext);
   const { token } = useAuth();
   const [message, setMessage] = useState("");
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   if (!invoiceContext) return <p>No invoice data found.</p>;
 
   const { invoiceNo, form, items, total } = invoiceContext;
   // console.log("TOKEN SENT TO BACKEND:", token);
 
+  const handleDownloadPDF = async () => {
+    if (!invoiceRef.current) return;
+
+    const canvas = await html2canvas(invoiceRef.current);
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`${invoiceNo}.pdf`);
+  };
+
   const handleConfirm = async () => {
-    console.log("SENDING:", {
-      invoiceNo,
-      clientName: form.clientName,
-      clientEmail: form.clientEmail,
-      invoiceDate: form.invoiceDate,
-      items,
-      total,
-    });
+    // console.log("SENDING:", {
+    //   invoiceNo,
+    //   clientName: form.clientName,
+    //   clientEmail: form.clientEmail,
+    //   invoiceDate: form.invoiceDate,
+    //   items,
+    //   total,
+    // });
 
     try {
-      await axios.post(
+      const res = await axios.post(
         "http://localhost:5000/api/invoices",
         {
           invoiceNo,
@@ -42,6 +57,12 @@ export default function InvoicePreview() {
             Authorization: `Bearer ${token}`,
           },
         },
+      );
+
+      await axios.post(
+        `http://localhost:5000/api/invoices/${res.data._id}/send`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       await axios.post(
