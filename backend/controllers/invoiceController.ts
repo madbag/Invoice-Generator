@@ -5,6 +5,7 @@
 import { Request, Response } from "express";
 import Invoice from "../models/Invoice";
 import { AuthRequest } from "../middleware/auth";
+import { sendInvoiceEmail } from "../utils/resentEmail";
 
 // CREATE INVOICE
 export const createInvoice = async (req: AuthRequest, res: Response,) => {
@@ -102,5 +103,18 @@ export const deleteInvoice = async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error(err);
     res.status(500).json({ error: "Server error." });
+  }
+};
+
+export const sendInvoice = async (req: AuthRequest, res: Response) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id);
+    if (!invoice) return res.status(404).json({ error: "Invoice not found" });
+
+    await sendInvoiceEmail(invoice);
+    res.json({ message: "Invoice sent successfully" });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send invoice" });
   }
 };

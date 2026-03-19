@@ -5,16 +5,19 @@ import {
   getInvoices,
   getInvoiceById,
   updateInvoiceStatus,
-  deleteInvoice
+  deleteInvoice,
+  sendInvoice,
 } from "../controllers/invoiceController";
-import authMiddleware from "../middleware/auth"
+import authMiddleware from "../middleware/auth";
 
 const router = express.Router();
 
 router.post("/", authMiddleware, createInvoice);
-router.get("/",authMiddleware, getInvoices);
-router.get("/:id",authMiddleware, getInvoiceById);
-router.put("/:id",authMiddleware, updateInvoiceStatus);
-router.delete("/:id",authMiddleware, deleteInvoice);
+router.get("/", authMiddleware, getInvoices);
+router.get("/:id", authMiddleware, getInvoiceById);
+router.put("/:id", authMiddleware, updateInvoiceStatus);
+router.delete("/:id", authMiddleware, deleteInvoice);
+
+router.post("/:id/send", authMiddleware, sendInvoice);
 
 export default router;
