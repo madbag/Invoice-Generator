@@ -5,6 +5,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import invoiceRoutes from "./routes/invoiceRoutes";
 import clientRoutes from "./routes/clientRoutes";
+import searchRoutes from "./routes/searchRoutes";
 import { errorHandler } from "./middleware/errorMiddleware";
 
 // loading env variables
@@ -34,6 +35,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/clients", clientRoutes);
+app.use("/api/search", searchRoutes);
 
 app.use(
   cors({
