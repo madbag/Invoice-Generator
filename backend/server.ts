@@ -1,49 +1,20 @@
-import express, { Application, Request, Response } from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import cors from "cors";
-import authRoutes from "./routes/authRoutes";
-import invoiceRoutes from "./routes/invoiceRoutes";
-import clientRoutes from "./routes/clientRoutes";
-import searchRoutes from "./routes/searchRoutes";
-import { errorHandler } from "./middleware/errorMiddleware";
+import { app } from "./app";
 
 // loading env variables
 dotenv.config();
-export const app: Application = express();
+
 const PORT = process.env.PORT || 5000;
 const MONGO = process.env.MONGO_URI || "";
-
-// Middleware
-// CORS allows frontend to access resources from backend
-app.use(cors());
-// tells express to turn the body into a json object
-app.use(express.json());
 
 //database connection
 mongoose
   .connect(MONGO)
-  .then(() => console.log("Connected to MongoDB"))
+  .then(() => {
+    console.log("Connected to MongoDB");
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
   .catch((err) => console.log("MongoDB connection error:", err));
-
-// simple route testing
-app.get("/", (req: Request, res: Response) => {
-  res.send("Invoice Page is running!");
-});
-
-//routes
-app.use("/api/auth", authRoutes);
-app.use("/api/invoices", invoiceRoutes);
-app.use("/api/clients", clientRoutes);
-app.use("/api/search", searchRoutes);
-
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-  }),
-);
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-app.use(errorHandler);
