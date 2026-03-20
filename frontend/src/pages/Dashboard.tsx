@@ -12,7 +12,7 @@ const Dashboard = () => {
         <Topbar />
 
         {/* Dashboard Content */}
-        <main className="p-6 flex flex-row items-center justify-center w-full h-screen bg-amber-50">
+        <main className="p-6 flex flex-row items-start justify-center align-items w-full h-screen bg-amber-50">
           <Outlet />
         </main>
       </div>

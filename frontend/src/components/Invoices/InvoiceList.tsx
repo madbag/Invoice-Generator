@@ -17,6 +17,29 @@ export default function InvoiceList({ limit }: { limit?: number }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
+  const handleDelete = async (invoiceId: string) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this invoice?",
+    );
+
+    if (confirmDelete) {
+      try {
+        await axios.delete(`http://localhost:5000/api/invoices/${invoiceId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setInvoices((prevInvoices) =>
+          prevInvoices.filter((invoice) => invoice._id !== invoiceId),
+        );
+
+        console.log("Invoice successfully deleted!");
+      } catch (error) {
+        console.error("Error deleting invoice:", error);
+        alert("Failed to delete the invoice. Please try again");
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
@@ -40,7 +63,16 @@ export default function InvoiceList({ limit }: { limit?: number }) {
   };
 
   if (loading) return <p>Loading invoices...</p>;
-  if (!invoices.length) return <p>No invoices found.</p>;
+  if (invoices.length === 0) {
+    return (
+      <div className="bg-white rounded-md m-3 p-6 text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Invoices</h1>
+        <p className="text-gray-500 italic">
+          You do not have any invoices right now.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white">
@@ -65,12 +97,20 @@ export default function InvoiceList({ limit }: { limit?: number }) {
               </td>
               <td className="border px-4 py-2">{invoice.status}</td>
               <td className="border px-4 py-2">
-                <button
-                  onClick={() => handleView(invoice._id)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                >
-                  View
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleView(invoice._id)}
+                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => handleDelete(invoice._id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

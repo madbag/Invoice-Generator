@@ -7,11 +7,32 @@ export default function ClientList() {
   const { token } = useAuth();
 
   const handleDelete = async (id: string) => {
-    await axios.delete(`http://localhost:5000/api/clients/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    fetchClients();
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this client?",
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/clients/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchClients();
+    } catch (error) {
+      console.error("Error deleting clients:", error);
+      alert("Failed to delete client. Please try again");
+    }
   };
+
+  if (!clients || clients.length === 0) {
+    return (
+      <div className="p-6 m-3 bg-white text-center">
+        <h1 className="text-2xl font-bold mb-2">Clients</h1>
+        <p className="text-gray-500 italic">
+          You do not have any clients right now{" "}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white">

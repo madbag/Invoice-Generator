@@ -90,7 +90,7 @@ const SignIn: React.FC = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
+          className="w-full bg-black text-white py-2 rounded-lg hover:bg-blue-600 transition"
         >
           Sign In
         </button>
