@@ -30,7 +30,7 @@ export default function GreetingCard() {
     user?.firstName && user?.lastName ? `${user.firstName}` : user?.email;
 
   return (
-    <div className="flex flex-row items-center gap-10 p-8">
+    <div className="flex flex-row items-center gap-10 justify-between py-3  ">
       <h1 className=" text-2xl font-bold mb-4">Hello, {displayName}</h1>
       <button
         onClick={handleNewInvoice}

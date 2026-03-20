@@ -14,7 +14,7 @@ export default function ClientList() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white">
       <h1 className="text-2xl font-bold mb-4">Clients</h1>
       <table className="w-full border-collapse shadow-md">
         <thead className="bg-gray-200">

@@ -11,7 +11,7 @@ interface Invoice {
   status: string;
 }
 
-export default function InvoiceList() {
+export default function InvoiceList({ limit }: { limit?: number }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -23,7 +23,8 @@ export default function InvoiceList() {
         const res = await axios.get("http://localhost:5000/api/invoices", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setInvoices(res.data);
+        const data = limit ? res.data.slice(0, limit) : res.data;
+        setInvoices(data);
       } catch (err) {
         console.error("Error fetching invoices:", err);
       } finally {
@@ -32,7 +33,7 @@ export default function InvoiceList() {
     };
 
     fetchInvoices();
-  }, [token]);
+  }, [token, limit]);
 
   const handleView = (invoiceId: string) => {
     navigate(`/dashboard/invoice-preview/${invoiceId}`);
@@ -42,7 +43,7 @@ export default function InvoiceList() {
   if (!invoices.length) return <p>No invoices found.</p>;
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white">
       <h1 className="text-2xl font-bold mb-4">Invoices</h1>
       <table className="w-full border-collapse shadow-md">
         <thead className="bg-gray-200">
@@ -59,7 +60,9 @@ export default function InvoiceList() {
             <tr key={invoice._id} className="hover:bg-gray-100">
               <td className="border px-4 py-2">{invoice.invoiceNo}</td>
               <td className="border px-4 py-2">{invoice.clientName}</td>
-              <td className="border px-4 py-2">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
+              <td className="border px-4 py-2">
+                {new Date(invoice.invoiceDate).toLocaleDateString()}
+              </td>
               <td className="border px-4 py-2">{invoice.status}</td>
               <td className="border px-4 py-2">
                 <button

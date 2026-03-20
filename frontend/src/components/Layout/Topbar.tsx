@@ -17,7 +17,7 @@ const Topbar = () => {
   };
 
   return (
-    <header className="w-full bg-white shadow p-4 flex justify-between items-center">
+    <header className="w-full shadow p-4 flex justify-between items-center bg-amber-50">
       <h1 className="text-xl font-semibold"><Search/></h1>
       <div className="flex items-center gap-4">
         <span
@@ -32,6 +32,7 @@ const Topbar = () => {
         >
           Logout
         </button>
+    
       </div>
     </header>
   );

@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 
 const Dashboard = () => {
   return (
-    <div className="flex ">
+    <div className="flex">
       <Sidebar />
 
       {/* Main Content */}
@@ -12,7 +12,7 @@ const Dashboard = () => {
         <Topbar />
 
         {/* Dashboard Content */}
-        <main className="p-6 flex flex-row items-center justify-center w-full">
+        <main className="p-6 flex flex-row items-center justify-center w-full h-screen bg-amber-50">
           <Outlet />
         </main>
       </div>

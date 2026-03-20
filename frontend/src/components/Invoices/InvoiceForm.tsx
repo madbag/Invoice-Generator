@@ -174,7 +174,7 @@ export default function CreateInvoice() {
   };
 
   return (
-    <div className="invoice-container w-full flex flex-col items-center justify-center bg-gray-100">
+    <div className="invoice-container w-full flex flex-col items-center justify-center">
       <div className="invoice-form flex flex-col gap-4 bg-white p-6 rounded shadow-md w-full max-w-3xl">
         <h1 className="text-2xl font-bold">Create Invoice</h1>
         <select
@@ -270,7 +270,7 @@ export default function CreateInvoice() {
                     name="description"
                     value={item.description}
                     onChange={(e) => handleItemChange(idx, e)}
-                    className={`border p-2 rounded ${errors.items?.[idx]?.description ? "border-red-500" : ""}`}
+                    className={`border p-2 rounded my-2 ${errors.items?.[idx]?.description ? "border-red-500" : ""}`}
                   />
                 </td>
                 <td>
