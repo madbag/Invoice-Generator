@@ -108,7 +108,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     const { firstName, lastName, email } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user,
+      req.user._id,
       { firstName, lastName, email },
       { new: true },
     ).select("-password");

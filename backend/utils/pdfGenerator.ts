@@ -13,7 +13,7 @@ export const PDFGenerator = (invoice: any): Promise<Buffer> => {
     doc
       .fontSize(10)
       .text(`Invoice No: ${invoice.invoiceNo}`, { align: "right" });
-    doc.text(`Date:${invoice.invoiceDate}, {align: "right"}`);
+    doc.text(`Date:${invoice.invoiceDate}`, { align: "right" });
     doc.moveDown();
 
     doc.fontSize(12).text("Bill To:");
