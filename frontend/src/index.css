@@ -1,2 +1,70 @@
 @import "tailwindcss";
 
+:root {
+  /* Dark theme - Professional business dashboard */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  
+  --card: #141414;
+  --card-foreground: #fafafa;
+  
+  --popover: #1a1a1a;
+  --popover-foreground: #fafafa;
+  
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  
+  --muted: #262626;
+  --muted-foreground: #a1a1aa;
+  
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  --border: #262626;
+  --input: #262626;
+  --ring: #3b82f6;
+  
+  --radius: 0.75rem;
+  
+  /* Status colors */
+  --status-paid: #10b981;
+  --status-pending: #f59e0b;
+  --status-overdue: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
