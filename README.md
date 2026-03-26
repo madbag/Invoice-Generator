@@ -1,6 +1,4 @@
 # 🧾 Invoice Generator
-
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
 ![React](https://img.shields.io/badge/react-18-blue)
 ![MongoDB](https://img.shields.io/badge/database-MongoDB-green)
