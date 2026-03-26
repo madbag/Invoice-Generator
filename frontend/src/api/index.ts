@@ -17,13 +17,13 @@ export interface UserProfile {
   };
 }
 
-const API = axios.create({
+export const API = axios.create({
   baseURL: "http://localhost:5000/api",
 });
 
 //this runs before every request and adds the token to the header if it exists
 API.interceptors.request.use((req) => {
-  const profile = localStorage.getItem("profile");
+  const profile = localStorage.getItem("auth");
 
   if (profile && req.headers) {
     req.headers.Authorization = `Bearer ${JSON.parse(profile).token}`;
@@ -39,4 +39,7 @@ export const signUp = (formData: any) => API.post("/auth/register", formData);
 export const getProfile = () => API.get("/auth/profile");
 export const updateProfile = (data: any) => API.put("/auth/profile", data);
 export const deleteProfile = () => API.delete("/auth/profile");
-
+export const forgotPassword = (email: string) =>
+  API.post("/auth/forgot-password", { email });
+export const resetPassword = (token: string, password: string) =>
+  API.post("/auth/reset-password", { token, password });

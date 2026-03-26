@@ -34,19 +34,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user: data.result,
       token: data.token,
     };
-
     setToken(authData.token);
     setUser(authData.user);
-
-    localStorage.setItem(
-      "auth",
-      JSON.stringify(authData)
-    );
+    localStorage.setItem("auth", JSON.stringify(authData));
   };
 
   const register = (data: any) => {
-    localStorage.setItem("auth", JSON.stringify(data.result));
-    setUser(data.result);
+    const authData = { user: data.result, token: data.token };
+    setUser(authData.user);
+    setToken(authData.token);
+    localStorage.setItem("auth", JSON.stringify(authData));
   };
 
   const signOut = () => {
@@ -57,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const stored = localStorage.getItem("auth");
+
     if (stored) {
       const parsed = JSON.parse(stored);
       setUser(parsed.user);

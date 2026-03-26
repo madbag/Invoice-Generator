@@ -1,11 +1,18 @@
 import React from "react";
 import SignUpForm from "../components/Auth/SignupForm";
+import AuthLayout from "../components/Auth/AuthLayout";
 
 const SignUpPage: React.FC = () => {
   return (
-    <div className="flex justify-center bg-gray-100">
-      <SignUpForm />
-    </div>
+    <AuthLayout
+      image="/signupBanner.png"
+      title="Join Us"
+      subtitle="Start creating professional invoices today."
+    >
+      <form>
+        <SignUpForm />
+      </form>
+    </AuthLayout>
   );
 };
 

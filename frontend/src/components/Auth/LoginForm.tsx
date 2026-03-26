@@ -1,24 +1,17 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { signIn } from "../../api/index.ts";
 import { useAuth } from "../../context/AuthContext.tsx";
 
 const SignIn: React.FC = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
   const { signIn: authSignIn } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -57,7 +50,9 @@ const SignIn: React.FC = () => {
             <div className="w-10 h-10 rounded-lg bg-[var(--primary)] flex items-center justify-center">
               <span className="text-white font-bold text-lg">IV</span>
             </div>
-            <span className="text-xl font-semibold text-[var(--foreground)]">InvoiceGen</span>
+            <span className="text-xl font-semibold text-[var(--foreground)]">
+              Invoice Generator
+            </span>
           </div>
         </div>
 
@@ -91,9 +86,18 @@ const SignIn: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-[var(--foreground)]">
+                  Password
+                </label>
+                {/* Now just a link to the dedicated page */}
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-[var(--primary)] hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 type="password"
                 name="password"
@@ -122,9 +126,12 @@ const SignIn: React.FC = () => {
 
           <p className="text-sm text-center mt-6 text-[var(--muted-foreground)]">
             Don't have an account?{" "}
-            <a href="/signup" className="text-[var(--primary)] hover:underline font-medium">
+            <Link
+              to="/signup"
+              className="text-[var(--primary)] hover:underline font-medium"
+            >
               Sign Up
-            </a>
+            </Link>
           </p>
         </div>
       </div>

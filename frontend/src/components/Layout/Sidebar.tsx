@@ -43,7 +43,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <span className="text-white font-bold text-sm">IV</span>
           </div>
           <span className="text-lg font-semibold text-[var(--foreground)]">
-            InvoiceGen
+            Invoice Generator
           </span>
         </Link>
         <button

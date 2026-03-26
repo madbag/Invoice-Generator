@@ -10,6 +10,8 @@ import Profile from "./components/Profile/Profile.tsx";
 import InvoicePreview from "./components/Invoices/InvoicePreview.tsx";
 import InvoiceList from "./components/Invoices/InvoiceList.tsx";
 import ClientList from "./components/Clients/ClientList.tsx";
+import { ForgotPassword } from "./components/Auth/ForgotPassword.tsx";
+import ResetPassword from "./components/Auth/ResetPassword.tsx";
 
 function App() {
   const { user } = useAuth();
@@ -27,6 +29,8 @@ function App() {
             !user ? <SignInPage /> : <Navigate to="/dashboard" replace />
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Dashboard Layout */}
         <Route
