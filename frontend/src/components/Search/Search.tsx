@@ -64,7 +64,7 @@ export default function Search() {
 
   const hasResults = results.invoices.length > 0 || results.clients.length > 0;
 
-  const handleInvoiceClick = (id: string) => {
+  const handleInvoiceClick = (_id: string) => {
     setShowDropdown(false);
     setQuery("");
     navigate(`/dashboard/invoice-list`);
