@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { API } from "../../api";
 
 interface Invoice {
   _id: string;
@@ -40,8 +41,8 @@ export default function InvoiceList({ limit }: { limit?: number }) {
   const handleStatusChange = async (invoiceId: string, newStatus: string) => {
     setUpdatingStatus(invoiceId);
     try {
-      const res = await axios.put(
-        `http://localhost:5000/api/invoices/${invoiceId}`,
+      const res = await API.put(
+        `/invoices/${invoiceId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -69,7 +70,7 @@ export default function InvoiceList({ limit }: { limit?: number }) {
 
     if (confirmDelete) {
       try {
-        await axios.delete(`http://localhost:5000/api/invoices/${invoiceId}`, {
+        await API.delete(`/invoices/${invoiceId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -86,7 +87,7 @@ export default function InvoiceList({ limit }: { limit?: number }) {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/invoices", {
+        const res = await API.get("/invoices", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = limit ? res.data.slice(0, limit) : res.data;

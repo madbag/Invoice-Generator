@@ -1,9 +1,10 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { InvoiceContext } from "../../context/InvoiceContext";
-import axios from "axios";
+
 import { useAuth } from "../../context/AuthContext";
 import { useClients } from "../../context/ClientContext";
+import { API } from "../../api";
 
 type FieldErrors = {
   clientName?: string;
@@ -45,7 +46,7 @@ export default function CreateInvoice() {
 
     const generateInvoiceNo = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/invoices", {
+        const res = await API.get("/invoices", {
           headers: { Authorization: `Bearer ${token}` },
         });
 

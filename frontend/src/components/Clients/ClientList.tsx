@@ -1,7 +1,8 @@
 import { useClients } from "../../context/ClientContext";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { API } from "../../api";
+
 
 export default function ClientList() {
   const { clients, fetchClients } = useClients();
@@ -15,7 +16,7 @@ export default function ClientList() {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/clients/${id}`, {
+      await API.delete(`/clients/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchClients();

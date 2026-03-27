@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useClients } from "../../context/ClientContext";
-import axios from "axios";
+
 import StatsCard from "./StatsCard";
 import ClientRevenueChart from "./ClientRevenueChart";
 import RecentInvoices from "./RecentInvoices";
+import { API } from "../../api";
 
 interface Invoice {
   _id: string;
-  invoiceNo: string;
+  invoiceNo: string
   clientName: string;
   clientEmail: string;
   invoiceDate: string;
@@ -50,7 +51,7 @@ export default function DashboardHome() {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/invoices", {
+        const res = await API.get("/invoices", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setInvoices(res.data);

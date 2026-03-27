@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import axios from "axios";
+
 import { useAuth } from "./AuthContext";
+import { API } from "../api";
 
 interface Client {
   _id: string;
@@ -27,7 +28,7 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
   const fetchClients = async () => {
     if (!token) return;
     try {
-      const res = await axios.get("http://localhost:5000/api/clients", {
+      const res = await API.get("/clients", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setClients(res.data);

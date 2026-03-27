@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+
 import { useContext, useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { InvoiceContext } from "../../context/InvoiceContext";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import {API} from "../../api";
 
 export default function InvoicePreview() {
   const navigate = useNavigate();
@@ -42,8 +43,8 @@ export default function InvoicePreview() {
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/invoices",
+      const res = await API.post(
+        "/invoices",
         {
           invoiceNo,
           clientName: form.clientName,
@@ -60,14 +61,14 @@ export default function InvoicePreview() {
         }
       );
 
-      await axios.post(
-        `http://localhost:5000/api/invoices/${res.data._id}/send`,
+      await API.post(
+        `/invoices/${res.data._id}/send`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      await axios.post(
-        "http://localhost:5000/api/clients",
+      await API.post(
+        "/clients",
         {
           clientName: form.clientName,
           clientEmail: form.clientEmail,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { API } from "../../api";
 
 interface SearchResults {
   invoices: any[];
@@ -44,8 +44,8 @@ export default function Search() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/search?q=${query}`,
+        const res = await API.get(
+          `/search?q=${query}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
