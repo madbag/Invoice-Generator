@@ -9,9 +9,9 @@ const SignUpPage: React.FC = () => {
       title="Join Us"
       subtitle="Start creating professional invoices today."
     >
-      <form>
+      <div>
         <SignUpForm />
-      </form>
+      </div>
     </AuthLayout>
   );
 };

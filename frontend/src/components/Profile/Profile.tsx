@@ -190,7 +190,7 @@ const Profile: React.FC = () => {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">My Profile</h1>
-          <p className="text-[var(--muted-foreground)] mt-1">
+          <p className="text-[var(--muted-foreground)] text-sm md:text-lg mt-1">
             {isEditing ? "Edit your account details below" : "Manage your account settings and business details"}
           </p>
         </div>
@@ -199,7 +199,7 @@ const Profile: React.FC = () => {
         {!isEditing ? (
           <button
             onClick={handleEdit}
-            className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+            className=" text-sm px-4 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
           >
             Edit Profile
           </button>

@@ -9,9 +9,9 @@ const SignInPage: React.FC = () => {
       title="Welcome Back"
       subtitle="Manage your invoices with ease."
     >
-      <form>
+      <div>
         <SignInForm />
-      </form>
+      </div>
     </AuthLayout>
   );
 };

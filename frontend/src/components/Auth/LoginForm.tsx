@@ -42,7 +42,7 @@ const SignIn: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-[var(--background)] p-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-[var(--background)]">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
@@ -56,11 +56,11 @@ const SignIn: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8">
-          <h2 className="text-2xl font-bold text-center text-[var(--foreground)] mb-2">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
+          <h2 className="text-xl md:text-2xl font-bold text-center text-[var(--foreground)] mb-2">
             Welcome back
           </h2>
-          <p className="text-center text-[var(--muted-foreground)] mb-6">
+          <p className="text-center text-[var(--muted-foreground)] mb-6 md:text-lg text-sm">
             Sign in to your account to continue
           </p>
 
@@ -80,14 +80,14 @@ const SignIn: React.FC = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors text-sm md:text-base"
                 placeholder="Enter your email"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-[var(--foreground)]">
+                <label className="block text-sm font-medium text-[var(--foreground)] ">
                   Password
                 </label>
                 {/* Now just a link to the dedicated page */}
@@ -103,7 +103,7 @@ const SignIn: React.FC = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors text-sm md:text-base"
                 placeholder="Enter your password"
               />
             </div>
@@ -111,7 +111,7 @@ const SignIn: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--primary)] text-white py-2.5 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-[var(--primary)] text-white py-2.5 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 text-sm md:text-base"
             >
               {loading ? (
                 <>
@@ -128,7 +128,7 @@ const SignIn: React.FC = () => {
             Don't have an account?{" "}
             <Link
               to="/signup"
-              className="text-[var(--primary)] hover:underline font-medium"
+              className="text-[var(--primary)] hover:underline font-medium text-sm"
             >
               Sign Up
             </Link>
