@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, useSearchParams, Link } from "react-router";
 import { signIn } from "../../api/index.ts";
 import { useAuth } from "../../context/AuthContext.tsx";
 
@@ -9,6 +9,8 @@ const SignIn: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn: authSignIn } = useAuth();
+  const [searchParams] = useSearchParams();
+  const verified = searchParams.get("verified");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,23 +48,34 @@ const SignIn: React.FC = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-[var(--primary)] flex items-center justify-center">
               <span className="text-white font-bold text-lg">IV</span>
             </div>
             <span className="text-xl font-semibold text-[var(--foreground)]">
               Invoice Generator
             </span>
-          </div>
+          </Link>
         </div>
 
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
           <h2 className="text-xl md:text-2xl font-bold text-center text-[var(--foreground)] mb-2">
-            Welcome back
+            Welcome
           </h2>
           <p className="text-center text-[var(--muted-foreground)] mb-6 md:text-lg text-sm">
             Sign in to your account to continue
           </p>
+
+          {verified === "true" && (
+            <div className="bg-green-500/10 text-green-600 p-3 rounded-lg mb-4 text-sm border border-green-500/20">
+              Email verified successfully! You can now sign in.
+            </div>
+          )}
+          {verified === "false" && (
+            <div className="bg-[var(--destructive)]/10 text-[var(--destructive)] p-3 rounded-lg mb-4 text-sm border border-[var(--destructive)]/20">
+              This verification link is invalid or has expired.
+            </div>
+          )}
 
           {error && (
             <div className="bg-[var(--destructive)]/10 text-[var(--destructive)] p-3 rounded-lg mb-4 text-sm border border-[var(--destructive)]/20">

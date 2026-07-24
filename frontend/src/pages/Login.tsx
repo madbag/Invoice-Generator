@@ -6,7 +6,7 @@ const SignInPage: React.FC = () => {
   return (
     <AuthLayout
       image="/signinBanner.png"
-      title="Welcome Back"
+      title="Welcome"
       subtitle="Manage your invoices with ease."
     >
       <div>

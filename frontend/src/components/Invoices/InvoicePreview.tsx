@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import { useContext, useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -7,12 +7,17 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import {API} from "../../api";
 
+const GUEST_SENT_KEY = "guestInvoiceSent";
+
 export default function InvoicePreview() {
   const navigate = useNavigate();
   const invoiceContext = useContext(InvoiceContext);
   const { token } = useAuth();
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [guestSent, setGuestSent] = useState(
+    () => !token && localStorage.getItem(GUEST_SENT_KEY) === "true"
+  );
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   if (!invoiceContext) {
@@ -40,7 +45,53 @@ export default function InvoicePreview() {
     pdf.save(`${invoiceNo}.pdf`);
   };
 
+  const resetInvoice = () => {
+    localStorage.removeItem("invoice");
+    invoiceContext!.setInvoiceData({
+      invoiceNo: "",
+      form: {
+        clientName: "",
+        clientAddress: "",
+        clientEmail: "",
+        contactNumber: "",
+        invoiceDate: "",
+      },
+      items: [{ description: "", quantity: 1, cost: 0 }],
+      total: 0,
+    });
+  };
+
+  const handleGuestConfirm = async () => {
+    setLoading(true);
+    try {
+      await API.post("/invoices/guest-send", {
+        invoiceNo,
+        clientName: form.clientName,
+        clientEmail: form.clientEmail,
+        items,
+      });
+
+      localStorage.setItem(GUEST_SENT_KEY, "true");
+      setGuestSent(true);
+      setMessage({
+        text: `Invoice sent to ${form.clientEmail}! Sign up to save this client and send more invoices.`,
+        type: "success",
+      });
+      resetInvoice();
+    } catch (error: any) {
+      console.error("Full error:", error.response?.data);
+      setMessage({ text: "Error sending invoice. Please try again.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleConfirm = async () => {
+    if (!token) {
+      await handleGuestConfirm();
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await API.post(
@@ -82,20 +133,7 @@ export default function InvoicePreview() {
 
       setMessage({ text: `Invoice saved & sent to ${form.clientEmail}!`, type: "success" });
 
-      localStorage.removeItem("invoice");
-
-      invoiceContext.setInvoiceData({
-        invoiceNo: "",
-        form: {
-          clientName: "",
-          clientAddress: "",
-          clientEmail: "",
-          contactNumber: "",
-          invoiceDate: "",
-        },
-        items: [{ description: "", quantity: 1, cost: 0 }],
-        total: 0,
-      });
+      resetInvoice();
 
       setTimeout(() => {
         navigate("/dashboard/invoice-list");
@@ -253,23 +291,32 @@ export default function InvoicePreview() {
         >
           Back to Edit
         </button>
-        <button
-          onClick={handleConfirm}
-          disabled={loading}
-          className="px-6 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Sending...
-            </>
-          ) : (
-            <>
-              <SendIcon />
-              Confirm & Send
-            </>
-          )}
-        </button>
+        {guestSent ? (
+          <Link
+            to="/signup"
+            className="px-6 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          >
+            Sign up to send more invoices
+          </Link>
+        ) : (
+          <button
+            onClick={handleConfirm}
+            disabled={loading}
+            className="px-6 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <SendIcon />
+                Confirm & Send
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

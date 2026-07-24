@@ -341,13 +341,13 @@ const Profile: React.FC = () => {
 
           {/* Business Details */}
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">Business Details</h3>
+            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1"> Your Business Details</h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-4">
               These details will appear on your invoices
             </p>
             <div className="space-y-4">
               <Field
-                label="Business Address"
+                label="Address"
                 name="business.address"
                 value={formData.businessDetails.address}
                 isEditing={isEditing}
@@ -356,7 +356,7 @@ const Profile: React.FC = () => {
                 isTextarea={true}
               />
               <Field
-                label="Business Contact"
+                label="Contact"
                 name="business.contact"
                 value={formData.businessDetails.contact}
                 isEditing={isEditing}

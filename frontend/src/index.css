@@ -1,44 +1,6 @@
 @import "tailwindcss";
 
 :root,
-[data-theme="dark"] {
-  /* Dark theme - Professional business dashboard */
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-
-  --card: #141414;
-  --card-foreground: #fafafa;
-
-  --popover: #1a1a1a;
-  --popover-foreground: #fafafa;
-
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-
-  --secondary: #262626;
-  --secondary-foreground: #fafafa;
-
-  --muted: #262626;
-  --muted-foreground: #a1a1aa;
-
-  --accent: #10b981;
-  --accent-foreground: #ffffff;
-
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-
-  --border: #262626;
-  --input: #262626;
-  --ring: #3b82f6;
-
-  --radius: 0.75rem;
-
-  /* Status colors */
-  --status-paid: #10b981;
-  --status-pending: #f59e0b;
-  --status-overdue: #ef4444;
-}
-
 [data-theme="light"] {
   /* Light theme */
   --background: #ffffff;
@@ -75,6 +37,44 @@
   --status-paid: #059669;
   --status-pending: #d97706;
   --status-overdue: #dc2626;
+}
+
+[data-theme="dark"] {
+  /* Dark theme - Professional business dashboard */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+
+  --card: #141414;
+  --card-foreground: #fafafa;
+
+  --popover: #1a1a1a;
+  --popover-foreground: #fafafa;
+
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+
+  --muted: #262626;
+  --muted-foreground: #a1a1aa;
+
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #262626;
+  --input: #262626;
+  --ring: #3b82f6;
+
+  --radius: 0.75rem;
+
+  /* Status colors */
+  --status-paid: #10b981;
+  --status-pending: #f59e0b;
+  --status-overdue: #ef4444;
 }
 
 * {

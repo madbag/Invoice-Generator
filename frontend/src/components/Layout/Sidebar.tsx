@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -7,12 +8,13 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
+  const { user } = useAuth();
 
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: DashboardIcon },
-    { path: "/dashboard/clients", label: "Clients", icon: ClientsIcon },
-    { path: "/dashboard/invoice-list", label: "Invoices", icon: InvoicesIcon },
-    { path: "/dashboard/profile", label: "Profile", icon: ProfileIcon },
+    { path: "/dashboard/clients", label: "Clients", icon: ClientsIcon, requiresAccount: true },
+    { path: "/dashboard/invoice-list", label: "Invoices", icon: InvoicesIcon, requiresAccount: true },
+    { path: "/dashboard/profile", label: "Profile", icon: ProfileIcon, requiresAccount: true },
   ];
 
   const isActive = (path: string) => {
@@ -76,7 +78,10 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                   `}
                 >
                   <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium flex-1">{item.label}</span>
+                  {item.requiresAccount && !user && (
+                    <LockIcon className="w-3.5 h-3.5 opacity-60" />
+                  )}
                 </Link>
               </li>
             );
@@ -171,6 +176,22 @@ const CloseIcon = () => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M6 18L18 6M6 6l12 12"
+    />
+  </svg>
+);
+
+const LockIcon = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
     />
   </svg>
 );

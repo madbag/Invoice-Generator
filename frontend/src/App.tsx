@@ -1,6 +1,7 @@
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.tsx";
+import LandingPage from "./pages/Landing.tsx";
 import SignInPage from "./pages/Login.tsx";
 import SignUpPage from "./pages/Signup.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
@@ -19,6 +20,8 @@ function App() {
   return (
     <>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
+
         <Route
           path="/signup"
           element={!user ? <SignUpPage /> : <Navigate to="/signin" replace />}
@@ -32,20 +35,27 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Dashboard Layout */}
-        <Route
-          path="/dashboard"
-          element={user ? <Dashboard /> : <Navigate to="/signin" replace />}
-        >
+        {/* Dashboard Layout — the shell and invoice creation are open to
+            everyone; pages backed by saved account data require signup */}
+        <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<DashboardHome />} />
 
           <Route path="create-invoice" element={<CreateInvoice />} />
           <Route path="invoice-preview" element={<InvoicePreview />} />
-          <Route path="invoice-list" element={<InvoiceList />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="clients" element={<ClientList />} />
+          <Route
+            path="invoice-list"
+            element={user ? <InvoiceList /> : <Navigate to="/signup" replace />}
+          />
+          <Route
+            path="profile"
+            element={user ? <Profile /> : <Navigate to="/signup" replace />}
+          />
+          <Route
+            path="clients"
+            element={user ? <ClientList /> : <Navigate to="/signup" replace />}
+          />
         </Route>
-        <Route path="*" element={<Navigate to="/signin" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

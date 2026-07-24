@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { signUp } from "../../api/index.ts";
 
 interface SignUpFormData {
@@ -74,12 +74,12 @@ const SignUp: React.FC = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-[var(--primary)] flex items-center justify-center">
               <span className="text-white font-bold text-lg">IV</span>
             </div>
             <span className="text-xl font-semibold text-[var(--foreground)]">InvoiceGen</span>
-          </div>
+          </Link>
         </div>
 
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">

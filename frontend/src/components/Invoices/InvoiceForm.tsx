@@ -25,6 +25,7 @@ export default function CreateInvoice() {
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const { clients } = useClients();
+  const today = new Date().toISOString().split("T")[0];
 
   const handleSelectClient = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = clients.find((c) => c._id === e.target.value);
@@ -42,27 +43,23 @@ export default function CreateInvoice() {
   };
 
   useEffect(() => {
-    if (!token) return;
-
     const generateInvoiceNo = async () => {
+      if (!token) {
+        // Guests aren't tied to a saved sequence — a short unique-enough number is fine.
+        setInvoiceData({ invoiceNo: `INV-${Date.now().toString().slice(-6)}` });
+        return;
+      }
       try {
         const res = await API.get("/invoices", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const invoices = res.data;
-        const numbers = invoices
+        const numbers = res.data
           .map((inv: any) => parseInt(inv.invoiceNo?.split("-")[1]))
           .filter((n: number) => !isNaN(n) && isFinite(n));
 
-        if (numbers.length === 0) {
-          setInvoiceData({ invoiceNo: "INV-001" });
-          return;
-        }
-        const highest = Math.max(...numbers);
-        setInvoiceData({
-          invoiceNo: `INV-${String(highest + 1).padStart(3, "0")}`,
-        });
+        const next = numbers.length === 0 ? 1 : Math.max(...numbers) + 1;
+        setInvoiceData({ invoiceNo: `INV-${String(next).padStart(3, "0")}` });
       } catch (err) {
         console.error("Failed to generate invoice number", err);
       }
@@ -126,6 +123,8 @@ export default function CreateInvoice() {
     if (!form.contactNumber.trim() || isNaN(Number(form.contactNumber)))
       newErrors.contactNumber = "Contact number invalid";
     if (!form.invoiceDate) newErrors.invoiceDate = "Invoice date required";
+    else if (form.invoiceDate > today)
+      newErrors.invoiceDate = "Invoice date cannot be in the future";
 
     items.forEach((item, index) => {
       newErrors.items![index] = {};
@@ -186,93 +185,59 @@ export default function CreateInvoice() {
             Client Information
           </h2>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-              Select Existing Client
-            </label>
-            <select
-              onChange={handleSelectClient}
-              className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
-            >
-              <option value="">-- Select client or fill manually --</option>
-              {clients.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.clientName} ({c.clientEmail})
-                </option>
-              ))}
-            </select>
-          </div>
+          {clients.length > 0 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+                Select Existing Client
+              </label>
+              <select
+                onChange={handleSelectClient}
+                className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+              >
+                <option value="">-- Select client or fill manually --</option>
+                {clients.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.clientName} ({c.clientEmail})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Client Name *
-              </label>
-              <input
-                name="clientName"
-                value={form.clientName}
-                placeholder="Enter client name"
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-[var(--secondary)] border rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors ${
-                  errors.clientName ? "border-[var(--destructive)]" : "border-[var(--border)]"
-                }`}
-              />
-              {errors.clientName && (
-                <p className="text-xs text-[var(--destructive)] mt-1">{errors.clientName}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Client Email *
-              </label>
-              <input
-                name="clientEmail"
-                value={form.clientEmail}
-                placeholder="Enter client email"
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-[var(--secondary)] border rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors ${
-                  errors.clientEmail ? "border-[var(--destructive)]" : "border-[var(--border)]"
-                }`}
-              />
-              {errors.clientEmail && (
-                <p className="text-xs text-[var(--destructive)] mt-1">{errors.clientEmail}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Client Address *
-              </label>
-              <input
-                name="clientAddress"
-                value={form.clientAddress}
-                placeholder="Enter client address"
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-[var(--secondary)] border rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors ${
-                  errors.clientAddress ? "border-[var(--destructive)]" : "border-[var(--border)]"
-                }`}
-              />
-              {errors.clientAddress && (
-                <p className="text-xs text-[var(--destructive)] mt-1">{errors.clientAddress}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Contact Number *
-              </label>
-              <input
-                name="contactNumber"
-                type="tel"
-                value={form.contactNumber}
-                placeholder="Enter contact number"
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-[var(--secondary)] border rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors ${
-                  errors.contactNumber ? "border-[var(--destructive)]" : "border-[var(--border)]"
-                }`}
-              />
-              {errors.contactNumber && (
-                <p className="text-xs text-[var(--destructive)] mt-1">{errors.contactNumber}</p>
-              )}
-            </div>
+            <FormField
+              label="Client Full Name *"
+              name="clientName"
+              value={form.clientName}
+              placeholder="Enter client name"
+              onChange={handleChange}
+              error={errors.clientName}
+            />
+            <FormField
+              label="Client Email *"
+              name="clientEmail"
+              value={form.clientEmail}
+              placeholder="Enter client email"
+              onChange={handleChange}
+              error={errors.clientEmail}
+            />
+            <FormField
+              label="Client Address *"
+              name="clientAddress"
+              value={form.clientAddress}
+              placeholder="Enter client address"
+              onChange={handleChange}
+              error={errors.clientAddress}
+            />
+            <FormField
+              label="Contact Number *"
+              name="contactNumber"
+              type="tel"
+              value={form.contactNumber}
+              placeholder="Enter contact number"
+              onChange={handleChange}
+              error={errors.contactNumber}
+            />
           </div>
         </div>
 
@@ -282,23 +247,15 @@ export default function CreateInvoice() {
             Invoice Details
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Invoice Date *
-              </label>
-              <input
-                name="invoiceDate"
-                type="date"
-                value={form.invoiceDate}
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-[var(--secondary)] border rounded-lg text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors ${
-                  errors.invoiceDate ? "border-[var(--destructive)]" : "border-[var(--border)]"
-                }`}
-              />
-              {errors.invoiceDate && (
-                <p className="text-xs text-[var(--destructive)] mt-1">{errors.invoiceDate}</p>
-              )}
-            </div>
+            <FormField
+              label="Invoice Date *"
+              name="invoiceDate"
+              type="date"
+              value={form.invoiceDate}
+              onChange={handleChange}
+              error={errors.invoiceDate}
+              max={today}
+            />
             <div>
               <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
                 Invoice Number
@@ -481,6 +438,46 @@ export default function CreateInvoice() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  name,
+  value,
+  onChange,
+  error,
+  type = "text",
+  placeholder,
+  max,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  type?: string;
+  placeholder?: string;
+  max?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+        {label}
+      </label>
+      <input
+        name={name}
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+        max={max}
+        className={`w-full px-4 py-2.5 bg-[var(--secondary)] border rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors ${
+          error ? "border-[var(--destructive)]" : "border-[var(--border)]"
+        }`}
+      />
+      {error && <p className="text-xs text-[var(--destructive)] mt-1">{error}</p>}
     </div>
   );
 }

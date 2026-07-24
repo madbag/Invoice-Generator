@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import Search from "../Search/Search";
@@ -86,27 +86,46 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
           >
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
-          {/* Profile dropdown */}
-          <div
-            onClick={handleProfileClick}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--secondary)] cursor-pointer transition-colors"
-          >
-            <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center">
-              <span className="text-white text-sm font-medium">{initials}</span>
-            </div>
-            <span className="hidden md:block text-sm font-medium text-[var(--foreground)]">
-              {displayName}
-            </span>
-          </div>
+          {user ? (
+            <>
+              {/* Profile dropdown */}
+              <div
+                onClick={handleProfileClick}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--secondary)] cursor-pointer transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">{initials}</span>
+                </div>
+                <span className="hidden md:block text-sm font-medium text-[var(--foreground)]">
+                  {displayName}
+                </span>
+              </div>
 
-          {/* Logout button */}
-          <button
-            onClick={signOut}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--destructive)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            <LogoutIcon />
-            <span className="hidden sm:inline">Logout</span>
-          </button>
+              {/* Logout button */}
+              <button
+                onClick={signOut}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--destructive)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                <LogoutIcon />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/signin"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/signup"
+                className="px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
