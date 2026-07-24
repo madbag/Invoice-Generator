@@ -21,6 +21,9 @@ const UserSchema = new Schema(
     },
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpiry: { type: Date, default: null },
+    isVerified: { type: Boolean, default: false },
+    verificationToken: { type: String, default: null },
+    verificationTokenExpiry: { type: Date, default: null },
   },
   { timestamps: true },
 );

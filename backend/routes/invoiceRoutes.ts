@@ -7,10 +7,14 @@ import {
   updateInvoiceStatus,
   deleteInvoice,
   sendInvoice,
+  sendGuestInvoice,
 } from "../controllers/invoiceController";
 import authMiddleware from "../middleware/auth";
 
 const router = express.Router();
+
+// Guest, one-time send — no auth, nothing is persisted
+router.post("/guest-send", sendGuestInvoice);
 
 router.post("/", authMiddleware, createInvoice);
 router.get("/", authMiddleware, getInvoices);

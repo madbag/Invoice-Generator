@@ -6,7 +6,10 @@ import User from "../models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../middleware/auth";
-import { sendPasswordResetEmail } from "../utils/resentEmail";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "../utils/resentEmail";
 import crypto from "crypto";
 
 //REGISTER FUNCTION
@@ -23,19 +26,26 @@ export const register = async (req: Request, res: Response) => {
     //if no, then hash the password
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Generate an email verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     //create a user
     const newUser = new User({
       firstName,
       lastName,
       email,
       password: hashedPassword,
+      verificationToken,
+      verificationTokenExpiry,
     });
 
     await newUser.save();
     console.log(
       `User ${newUser.firstName} ${newUser.lastName} saved successfully with id ${newUser._id}`,
     );
-    // res.status(201).json({  });
+
+    await sendVerificationEmail(newUser.email, verificationToken);
 
     //create a token so they stay logged in even tho the page is refreshed
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!, {
@@ -43,12 +53,41 @@ export const register = async (req: Request, res: Response) => {
     });
 
     res.status(201).json({
-      message: "User registered successfully",
+      message:
+        "User registered successfully. Please check your email to verify your account.",
       result: newUser,
       token,
     });
   } catch (err) {
+    console.error("Registration failed:", err);
     res.status(500).json({ message: "Cannot register the user" });
+  }
+};
+
+// VERIFY EMAIL — clicked from the verification email, redirects to sign-in
+export const verifyEmail = async (req: Request, res: Response) => {
+  const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, "");
+
+  try {
+    const { token } = req.query;
+
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.redirect(`${frontendUrl}/signin?verified=false`);
+    }
+
+    user.isVerified = true;
+    user.verificationToken = null;
+    user.verificationTokenExpiry = null;
+    await user.save();
+
+    res.redirect(`${frontendUrl}/signin?verified=true`);
+  } catch (error) {
+    res.redirect(`${frontendUrl}/signin?verified=false`);
   }
 };
 

@@ -106,6 +106,30 @@ export const deleteInvoice = async (req: Request, res: Response) => {
   }
 };
 
+// SEND INVOICE FOR A GUEST (ONE-TIME, NO AUTH) — emails the invoice without saving anything
+export const sendGuestInvoice = async (req: Request, res: Response) => {
+  try {
+    const { invoiceNo, clientName, clientEmail, items } = req.body;
+
+    if (!invoiceNo || !clientName || !clientEmail || !items) {
+      return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    const total = items.reduce(
+      (sum: number, item: { quantity: number; cost: number }) =>
+        sum + item.quantity * item.cost,
+      0,
+    );
+
+    await sendInvoiceEmail({ invoiceNo, clientName, clientEmail, total });
+
+    res.json({ message: "Invoice sent successfully" });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send invoice" });
+  }
+};
+
 export const sendInvoice = async (req: AuthRequest, res: Response) => {
   try {
     const invoice = await Invoice.findById(req.params.id);
