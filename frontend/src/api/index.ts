@@ -43,3 +43,6 @@ export const forgotPassword = (email: string) =>
   API.post("/auth/forgot-password", { email });
 export const resetPassword = (token: string, password: string) =>
   API.post("/auth/reset-password", { token, password });
+
+export const downloadInvoicePdf = (data: any) =>
+  API.post("/invoices/pdf", data, { responseType: "blob" });

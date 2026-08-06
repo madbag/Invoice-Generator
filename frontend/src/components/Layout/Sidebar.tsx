@@ -37,7 +37,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-[var(--border)]">
         <Link
-          to="/dashboard"
+          to="/"
           className="flex items-center gap-2"
           onClick={onClose}
         >

@@ -1,13 +1,15 @@
 import { useNavigate, Link } from "react-router-dom";
 
-import { useContext, useState, useRef } from "react";
+import { useContext, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { InvoiceContext } from "../../context/InvoiceContext";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import {API} from "../../api";
+import { API, downloadInvoicePdf } from "../../api";
 
-const GUEST_SENT_KEY = "guestInvoiceSent";
+const GUEST_SEND_COUNT_KEY = "guestInvoiceSendCount";
+const GUEST_SEND_LIMIT = 5;
+
+const getGuestSendCount = () =>
+  Number(localStorage.getItem(GUEST_SEND_COUNT_KEY)) || 0;
 
 export default function InvoicePreview() {
   const navigate = useNavigate();
@@ -15,10 +17,10 @@ export default function InvoicePreview() {
   const { token } = useAuth();
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [guestSent, setGuestSent] = useState(
-    () => !token && localStorage.getItem(GUEST_SENT_KEY) === "true"
+  const [guestSendCount, setGuestSendCount] = useState(() =>
+    !token ? getGuestSendCount() : 0
   );
-  const invoiceRef = useRef<HTMLDivElement>(null);
+  const guestLimitReached = !token && guestSendCount >= GUEST_SEND_LIMIT;
 
   if (!invoiceContext) {
     return (
@@ -31,18 +33,30 @@ export default function InvoicePreview() {
   const { invoiceNo, form, items, total } = invoiceContext;
 
   const handleDownloadPDF = async () => {
-    if (!invoiceRef.current) return;
+    try {
+      const res = await downloadInvoicePdf({
+        invoiceNo,
+        clientName: form.clientName,
+        clientEmail: form.clientEmail,
+        clientAddress: form.clientAddress,
+        contactNumber: form.contactNumber,
+        invoiceDate: form.invoiceDate,
+        items,
+      });
 
-    const canvas = await html2canvas(invoiceRef.current, {
-      backgroundColor: "#ffffff",
-      scale: 2,
-    });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`${invoiceNo}.pdf`);
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${invoiceNo}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download PDF", error);
+      setMessage({ text: "Failed to download PDF. Please try again.", type: "error" });
+    }
   };
 
   const resetInvoice = () => {
@@ -68,14 +82,22 @@ export default function InvoicePreview() {
         invoiceNo,
         clientName: form.clientName,
         clientEmail: form.clientEmail,
+        clientAddress: form.clientAddress,
+        contactNumber: form.contactNumber,
         invoiceDate: form.invoiceDate,
         items,
       });
 
-      localStorage.setItem(GUEST_SENT_KEY, "true");
-      setGuestSent(true);
+      const nextCount = getGuestSendCount() + 1;
+      localStorage.setItem(GUEST_SEND_COUNT_KEY, String(nextCount));
+      setGuestSendCount(nextCount);
+
+      const remaining = GUEST_SEND_LIMIT - nextCount;
       setMessage({
-        text: `Invoice sent to ${form.clientEmail}! Sign up to save this client and send more invoices.`,
+        text:
+          remaining > 0
+            ? `Invoice sent to ${form.clientEmail}! You have ${remaining} free invoice${remaining === 1 ? "" : "s"} left before you'll need to sign up.`
+            : `Invoice sent to ${form.clientEmail}! Sign up to save this client and send more invoices.`,
         type: "success",
       });
       resetInvoice();
@@ -101,6 +123,8 @@ export default function InvoicePreview() {
           invoiceNo,
           clientName: form.clientName,
           clientEmail: form.clientEmail,
+          clientAddress: form.clientAddress,
+          contactNumber: form.contactNumber,
           invoiceDate: form.invoiceDate,
           items,
           total,
@@ -186,10 +210,7 @@ export default function InvoicePreview() {
       )}
 
       {/* Invoice Document */}
-      <div
-        ref={invoiceRef}
-        className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-lg"
-      >
+      <div className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-lg">
         {/* Invoice Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -292,7 +313,7 @@ export default function InvoicePreview() {
         >
           Back to Edit
         </button>
-        {guestSent ? (
+        {guestLimitReached ? (
           <Link
             to="/signup"
             className="px-6 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
