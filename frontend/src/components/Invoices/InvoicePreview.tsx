@@ -68,6 +68,7 @@ export default function InvoicePreview() {
         invoiceNo,
         clientName: form.clientName,
         clientEmail: form.clientEmail,
+        invoiceDate: form.invoiceDate,
         items,
       });
 

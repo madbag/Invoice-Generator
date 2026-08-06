@@ -52,7 +52,7 @@ This project demonstrates full-stack development including authentication, REST 
 
 ## Project Overview
 
-This application allows authenticated users to create professional invoices, preview them, and send them as PDF files directly to clients.
+This application allows authenticated and non-authenticated users to create professional invoices, preview them, and send them as PDF files directly to clients.
 
 The goal of this project was to build a real-world business tool while demonstrating backend architecture, API development, authentication, and frontend state management.
 
@@ -130,7 +130,7 @@ Make sure you have the following installed before running the project:
 
 - [Node.js](https://nodejs.org/) v18 or higher
 - [npm](https://www.npmjs.com/) v9 or higher
-- [MongoDB]free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
+- free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
 - A Gmail account with an [App Password](https://support.google.com/accounts/answer/185833) enabled (required for Resend)
 
 ---
@@ -198,7 +198,7 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 RESEND_API_KEY=your_email@gmail.com
-FRONTEND_URL=your_gmail_app_password
+FRONTEND_URL=your_deployed_link
 ```
 
 ---
@@ -278,25 +278,9 @@ Authorization: Bearer <token>
 
 ---
 
-## Contributing
-
-Contributions are welcome! To get started:
-
-1. Fork the repository
-2. Create a new branch: `git checkout -b feature/your-feature-name`
-3. Make your changes and commit: `git commit -m 'Add some feature'`
-4. Push to your branch: `git push origin feature/your-feature-name`
-5. Open a Pull Request
-
-Please make sure your code follows the existing style and that any new features are tested before submitting.
-
----
-
 ## Author
 
-**Your Name**
+**Madhushree Boyle**
 
 - GitHub: [@madbag](https://github.com/madbag)
 - LinkedIn: [Madhushree B](https://linkedin.com/in/madhushreeb)
-
-

@@ -109,7 +109,7 @@ export const deleteInvoice = async (req: Request, res: Response) => {
 // SEND INVOICE FOR A GUEST (ONE-TIME, NO AUTH) — emails the invoice without saving anything
 export const sendGuestInvoice = async (req: Request, res: Response) => {
   try {
-    const { invoiceNo, clientName, clientEmail, items } = req.body;
+    const { invoiceNo, clientName, clientEmail, invoiceDate, items } = req.body;
 
     if (!invoiceNo || !clientName || !clientEmail || !items) {
       return res.status(400).json({ error: "Missing required fields." });
@@ -121,7 +121,14 @@ export const sendGuestInvoice = async (req: Request, res: Response) => {
       0,
     );
 
-    await sendInvoiceEmail({ invoiceNo, clientName, clientEmail, total });
+    await sendInvoiceEmail({
+      invoiceNo,
+      clientName,
+      clientEmail,
+      invoiceDate,
+      items,
+      total,
+    });
 
     res.json({ message: "Invoice sent successfully" });
   } catch (err: any) {
