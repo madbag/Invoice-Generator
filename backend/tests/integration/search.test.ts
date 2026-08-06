@@ -49,6 +49,8 @@ const seedData = async (token: string) => {
       invoiceNo: "INV-001",
       clientName: "Acme Corp",
       clientEmail: "acme@example.com",
+      clientAddress: "123 Main St",
+      contactNumber: "1234567890",
       invoiceDate: "2024-01-01",
       items: [{ description: "Web Design", quantity: 2, cost: 500 }],
     });

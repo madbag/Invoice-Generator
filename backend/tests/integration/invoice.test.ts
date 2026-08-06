@@ -46,6 +46,8 @@ const sampleInvoice = {
   invoiceNo: "INV-001",
   clientName: "Acme Corp",
   clientEmail: "acme@example.com",
+  clientAddress: "123 Main St, Springfield",
+  contactNumber: "555-1234",
   invoiceDate: "2024-01-01",
   items: [{ description: "Web Design", quantity: 2, cost: 500 }],
 };

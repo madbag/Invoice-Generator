@@ -6,6 +6,7 @@ import { Request, Response } from "express";
 import Invoice from "../models/Invoice";
 import { AuthRequest } from "../middleware/auth";
 import { sendInvoiceEmail } from "../utils/resentEmail";
+import { PDFGenerator } from "../utils/pdfGenerator";
 
 // CREATE INVOICE
 export const createInvoice = async (req: AuthRequest, res: Response,) => {
@@ -14,9 +15,25 @@ export const createInvoice = async (req: AuthRequest, res: Response,) => {
   
   try {
     const userId = req.user?._id;
-    const { invoiceNo, clientName, clientEmail, invoiceDate, items } = req.body;
+    const {
+      invoiceNo,
+      clientName,
+      clientEmail,
+      clientAddress,
+      contactNumber,
+      invoiceDate,
+      items,
+    } = req.body;
 
-    if (!invoiceNo || !clientName || !clientEmail || !invoiceDate || !items) {
+    if (
+      !invoiceNo ||
+      !clientName ||
+      !clientEmail ||
+      !clientAddress ||
+      !contactNumber ||
+      !invoiceDate ||
+      !items
+    ) {
       return res.status(400).json({ error: "Missing required fields." });
     }
 
@@ -31,6 +48,8 @@ export const createInvoice = async (req: AuthRequest, res: Response,) => {
       invoiceNo,
       clientName,
       clientEmail,
+      clientAddress,
+      contactNumber,
       invoiceDate,
       items,
       total,
@@ -109,9 +128,24 @@ export const deleteInvoice = async (req: Request, res: Response) => {
 // SEND INVOICE FOR A GUEST (ONE-TIME, NO AUTH) — emails the invoice without saving anything
 export const sendGuestInvoice = async (req: Request, res: Response) => {
   try {
-    const { invoiceNo, clientName, clientEmail, invoiceDate, items } = req.body;
+    const {
+      invoiceNo,
+      clientName,
+      clientEmail,
+      clientAddress,
+      contactNumber,
+      invoiceDate,
+      items,
+    } = req.body;
 
-    if (!invoiceNo || !clientName || !clientEmail || !items) {
+    if (
+      !invoiceNo ||
+      !clientName ||
+      !clientEmail ||
+      !clientAddress ||
+      !contactNumber ||
+      !items
+    ) {
       return res.status(400).json({ error: "Missing required fields." });
     }
 
@@ -125,6 +159,8 @@ export const sendGuestInvoice = async (req: Request, res: Response) => {
       invoiceNo,
       clientName,
       clientEmail,
+      clientAddress,
+      contactNumber,
       invoiceDate,
       items,
       total,
@@ -134,6 +170,64 @@ export const sendGuestInvoice = async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error(err);
     res.status(500).json({ error: "Failed to send invoice" });
+  }
+};
+
+// GENERATE INVOICE PDF FOR DOWNLOAD — no auth, works off the draft form data
+// directly so it's available before (and after) the invoice is saved.
+export const downloadInvoicePdf = async (req: Request, res: Response) => {
+  try {
+    const {
+      invoiceNo,
+      clientName,
+      clientEmail,
+      clientAddress,
+      contactNumber,
+      invoiceDate,
+      items,
+    } = req.body;
+
+    if (
+      !invoiceNo ||
+      !clientName ||
+      !clientEmail ||
+      !clientAddress ||
+      !contactNumber ||
+      !invoiceDate ||
+      !items
+    ) {
+      return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    const total = items.reduce(
+      (sum: number, item: { quantity: number; cost: number }) =>
+        sum + item.quantity * item.cost,
+      0,
+    );
+
+    const pdfBuffer = await PDFGenerator({
+      invoiceNo,
+      clientName,
+      clientEmail,
+      clientAddress,
+      contactNumber,
+      invoiceDate,
+      items,
+      total,
+    });
+
+    const safeName =
+      String(invoiceNo).replace(/[^a-zA-Z0-9-_]/g, "_") || "invoice";
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${safeName}.pdf"`,
+    );
+    res.send(pdfBuffer);
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to generate PDF" });
   }
 };
 
