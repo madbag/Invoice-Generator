@@ -41,6 +41,8 @@ export const updateProfile = (data: any) => API.put("/auth/profile", data);
 export const deleteProfile = () => API.delete("/auth/profile");
 export const forgotPassword = (email: string) =>
   API.post("/auth/forgot-password", { email });
+export const resendVerification = (email: string) =>
+  API.post("/auth/resend-verification", { email });
 export const resetPassword = (token: string, password: string) =>
   API.post("/auth/reset-password", { token, password });
 

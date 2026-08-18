@@ -59,7 +59,7 @@ const SignUp: React.FC = () => {
     setLoading(true);
     try {
       await signUp(formData);
-      navigate("/signin");
+      navigate("/signin?registered=true");
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);

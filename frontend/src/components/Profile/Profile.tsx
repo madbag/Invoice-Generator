@@ -66,7 +66,7 @@ const Field = ({
 );
 
 const Profile: React.FC = () => {
-  const { token } = useAuth();
+  const { token, updateUser } = useAuth();
   const [formData, setFormData] = useState<ProfileData>({
     firstName: "",
     lastName: "",
@@ -150,6 +150,12 @@ const Profile: React.FC = () => {
       };
       setFormData(updated);
       setSavedData(updated);
+      updateUser({
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        email: updated.email,
+        businessDetails: updated.businessDetails,
+      });
       setIsEditing(false);
       setMessage({ text: "Profile updated successfully!", type: "success" });
       setTimeout(() => setMessage(null), 3000);

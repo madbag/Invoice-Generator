@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
-import { signIn } from "../../api/index.ts";
+import { signIn, resendVerification } from "../../api/index.ts";
 import { useAuth } from "../../context/AuthContext.tsx";
 
 const SignIn: React.FC = () => {
@@ -8,18 +8,26 @@ const SignIn: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendStatus, setResendStatus] = useState<
+    "idle" | "sending" | "sent"
+  >("idle");
   const navigate = useNavigate();
   const { signIn: authSignIn } = useAuth();
   const [searchParams] = useSearchParams();
   const verified = searchParams.get("verified");
+  const registered = searchParams.get("registered");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setNeedsVerification(false);
+    setResendStatus("idle");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setNeedsVerification(false);
 
     if (!formData.email || !formData.password) {
       setError("All fields are required");
@@ -34,6 +42,9 @@ const SignIn: React.FC = () => {
     } catch (err: any) {
       if (err.response?.status === 404) {
         setError("This user does not exist");
+      } else if (err.response?.status === 403) {
+        setError(err.response.data.message);
+        setNeedsVerification(true);
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
@@ -41,6 +52,16 @@ const SignIn: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendStatus("sending");
+    try {
+      await resendVerification(formData.email);
+      setResendStatus("sent");
+    } catch {
+      setResendStatus("idle");
     }
   };
 
@@ -67,6 +88,12 @@ const SignIn: React.FC = () => {
             Sign in to your account to continue
           </p>
 
+          {registered === "true" && (
+            <div className="bg-green-500/10 text-green-600 p-3 rounded-lg mb-4 text-sm border border-green-500/20">
+              Account created! Please check your email to verify your email id before signing in.
+            </div>
+          )}
+
           {verified === "true" && (
             <div className="bg-green-500/10 text-green-600 p-3 rounded-lg mb-4 text-sm border border-green-500/20">
               Email verified successfully! You can now sign in.
@@ -80,7 +107,27 @@ const SignIn: React.FC = () => {
 
           {error && (
             <div className="bg-[var(--destructive)]/10 text-[var(--destructive)] p-3 rounded-lg mb-4 text-sm border border-[var(--destructive)]/20">
-              {error}
+              <p>{error}</p>
+              {needsVerification && (
+                <div className="mt-2">
+                  {resendStatus === "sent" ? (
+                    <p className="text-[var(--foreground)]">
+                      Verification email sent — check your inbox.
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={resendStatus === "sending"}
+                      className="text-[var(--primary)] hover:underline font-medium disabled:opacity-50"
+                    >
+                      {resendStatus === "sending"
+                        ? "Sending..."
+                        : "Resend verification email"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

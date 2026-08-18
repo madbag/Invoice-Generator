@@ -18,6 +18,7 @@ interface AuthContextType {
   signIn: (data: any) => void;
   signOut: () => void;
   register: (data: any) => void;
+  updateUser: (data: Partial<User>) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -52,6 +53,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
   };
 
+  const updateUser = (data: Partial<User>) => {
+    setUser((prev) => {
+      const updated = prev ? { ...prev, ...data } : (data as User);
+      const stored = localStorage.getItem("auth");
+      const authData = stored ? JSON.parse(stored) : {};
+      localStorage.setItem(
+        "auth",
+        JSON.stringify({ ...authData, user: updated }),
+      );
+      return updated;
+    });
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem("auth");
 
@@ -64,7 +78,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, signIn, signOut, register }}>
+    <AuthContext.Provider
+      value={{ user, token, signIn, signOut, register, updateUser }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );
