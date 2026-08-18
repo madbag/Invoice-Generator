@@ -8,6 +8,13 @@ jest.mock("nodemailer", () => ({
   })),
 }));
 
+// mock dns so resolving smtp.gmail.com's IPv4 address doesn't hit the network
+jest.mock("dns", () => ({
+  promises: {
+    resolve4: jest.fn().mockResolvedValue(["142.250.1.109"]),
+  },
+}));
+
 // mock PDFGenerator so no real PDF is generated
 jest.mock("../../utils/pdfGenerator", () => ({
   PDFGenerator: jest.fn().mockResolvedValue(Buffer.from("mock-pdf")),
