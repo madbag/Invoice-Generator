@@ -6,6 +6,12 @@ import { useAuth } from "../../context/AuthContext";
 import { useClients } from "../../context/ClientContext";
 import { API } from "../../api";
 
+const blockNonNumericKeys = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (["e", "E", "+", "-"].includes(e.key)) {
+    e.preventDefault();
+  }
+};
+
 type FieldErrors = {
   clientName?: string;
   clientAddress?: string;
@@ -328,11 +334,14 @@ export default function CreateInvoice() {
                       <input
                         type="number"
                         name="cost"
-                        value={item.cost}
-                        onChange={(e) => handleItemChange(idx, e)}
+                          value={item.cost === 0 ? "" : item.cost}
+
+                              onChange={(e) => handleItemChange(idx, e)}
+                        onKeyDown={blockNonNumericKeys}
                         min="0"
                         step="0.01"
-                        className="w-full px-3 py-2 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--primary)]"
+                        placeholder="0.00"
+                        className="no-spinner w-full px-3 py-2 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--primary)]"
                       />
                     </td>
                     <td className="py-3 text-right text-[var(--foreground)] font-medium">
@@ -390,9 +399,13 @@ export default function CreateInvoice() {
                     <input
                       type="number"
                       name="cost"
-                      value={item.cost}
+                      value={item.cost === 0 ? "" : item.cost}
                       onChange={(e) => handleItemChange(idx, e)}
-                      className="w-full px-3 py-2 bg-[var(--card)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm"
+                      onKeyDown={blockNonNumericKeys}
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="no-spinner w-full px-3 py-2 bg-[var(--card)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm"
                     />
                   </div>
                   <div>
