@@ -3,7 +3,18 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { app } from "../../app";
 
+
+
+import User from "../../models/User";
+
+jest.mock("../../utils/resentEmail");
+
 process.env.JWT_SECRET = "test_secret";
+
+// tests below log in right after registering — mark the user verified
+// so the isVerified gate in login() doesn't block them
+const verifyTestUser = (email: string) =>
+  User.findOneAndUpdate({ email }, { isVerified: true });
 
 let mongo: MongoMemoryServer;
 let token: string; // reused across protected route tests
@@ -43,14 +54,16 @@ describe("POST /api/auth/register", () => {
     expect(res.body.result.email).toBe("test@example.com");
   });
 
-  it("should return 400 if user already exists", async () => {
-    // register once
+  it("should return 400 if a verified user already exists", async () => {
+    // register once, then verify — re-registering an unverified account
+    // instead issues a fresh verification link (tested separately)
     await request(app).post("/api/auth/register").send({
       firstName: "Test",
       lastName: "User",
       email: "test@example.com",
       password: "password123",
     });
+    await verifyTestUser("test@example.com");
 
     // register again with same email
     const res = await request(app).post("/api/auth/register").send({
@@ -62,6 +75,75 @@ describe("POST /api/auth/register", () => {
 
     expect(res.statusCode).toEqual(400);
     expect(res.body.message).toBe("User already exists");
+  });
+
+  it("should issue a fresh verification link when re-registering an unverified email", async () => {
+    await request(app).post("/api/auth/register").send({
+      firstName: "Test",
+      lastName: "User",
+      email: "test@example.com",
+      password: "password123",
+    });
+
+    // never verified — try registering again with the same email
+    const res = await request(app).post("/api/auth/register").send({
+      firstName: "Test",
+      lastName: "User",
+      email: "test@example.com",
+      password: "password123",
+    });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toContain("new verification link");
+
+    const user = await User.findOne({ email: "test@example.com" });
+    expect(user?.isVerified).toBe(false);
+  });
+});
+
+// ─── RESEND VERIFICATION ──────────────────────────────────────────────────────
+
+describe("POST /api/auth/resend-verification", () => {
+  it("should return a generic success message for an unverified account", async () => {
+    await request(app).post("/api/auth/register").send({
+      firstName: "Test",
+      lastName: "User",
+      email: "test@example.com",
+      password: "password123",
+    });
+
+    const res = await request(app)
+      .post("/api/auth/resend-verification")
+      .send({ email: "test@example.com" });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toContain("verification link has been sent");
+  });
+
+  it("should return the same generic message for an unknown email", async () => {
+    const res = await request(app)
+      .post("/api/auth/resend-verification")
+      .send({ email: "nobody@example.com" });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toContain("verification link has been sent");
+  });
+
+  it("should return the same generic message if already verified", async () => {
+    await request(app).post("/api/auth/register").send({
+      firstName: "Test",
+      lastName: "User",
+      email: "test@example.com",
+      password: "password123",
+    });
+    await verifyTestUser("test@example.com");
+
+    const res = await request(app)
+      .post("/api/auth/resend-verification")
+      .send({ email: "test@example.com" });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toContain("verification link has been sent");
   });
 });
 
@@ -76,6 +158,7 @@ describe("POST /api/auth/login", () => {
       email: "test@example.com",
       password: "password123",
     });
+    await verifyTestUser("test@example.com");
   });
 
   it("should login and return a token", async () => {
@@ -120,6 +203,7 @@ describe("GET /api/auth/profile", () => {
       email: "test@example.com",
       password: "password123",
     });
+    await verifyTestUser("test@example.com");
     const loginRes = await request(app).post("/api/auth/login").send({
       email: "test@example.com",
       password: "password123",
@@ -152,6 +236,7 @@ describe("PUT /api/auth/profile", () => {
       email: "test@example.com",
       password: "password123",
     });
+    await verifyTestUser("test@example.com");
     const loginRes = await request(app).post("/api/auth/login").send({
       email: "test@example.com",
       password: "password123",
@@ -182,6 +267,7 @@ describe("DELETE /api/auth/profile", () => {
       email: "test@example.com",
       password: "password123",
     });
+    await verifyTestUser("test@example.com");
     const loginRes = await request(app).post("/api/auth/login").send({
       email: "test@example.com",
       password: "password123",

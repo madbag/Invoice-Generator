@@ -1,12 +1,20 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { PDFGenerator } from "./pdfGenerator";
 
+const getTransporter = () =>
+  nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+
 export const sendInvoiceEmail = async (invoice: any) => {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const pdfBuffer = await PDFGenerator(invoice);
 
-  const { error } = await resend.emails.send({
-    from: "onboarding@resend.dev", // use this until you verify a domain
+  await getTransporter().sendMail({
+    from: process.env.GMAIL_USER,
     to: invoice.clientEmail,
     subject: `Invoice ${invoice.invoiceNo} from Your Business`,
     html: `<p>Dear ${invoice.clientName},</p>
@@ -20,23 +28,17 @@ export const sendInvoiceEmail = async (invoice: any) => {
       },
     ],
   });
-
-  if (error) {
-    console.error("Resend failed to send invoice email:", error);
-    throw new Error(error.message);
-  }
 };
 
 export const sendVerificationEmail = async (
   email: string,
   verificationToken: string,
 ) => {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const baseUrl = process.env.BACKEND_URL?.replace(/\/$/, "");
   const verifyLink = `${baseUrl}/api/auth/verify-email?token=${verificationToken}`;
 
-  const { error } = await resend.emails.send({
-    from: "onboarding@resend.dev",
+  await getTransporter().sendMail({
+    from: process.env.GMAIL_USER,
     to: email,
     subject: "Verify your email address",
     html: `
@@ -46,23 +48,17 @@ export const sendVerificationEmail = async (
       <p>If you didn't create this account, you can safely ignore this email.</p>
     `,
   });
-
-  if (error) {
-    console.error("Resend failed to send verification email:", error);
-    throw new Error(error.message);
-  }
 };
 
 export const sendPasswordResetEmail = async (
   email: string,
   resetToken: string,
 ) => {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const baseUrl = process.env.FRONTEND_URL?.replace(/\/$/, "");
   const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
 
-  const { error } = await resend.emails.send({
-    from: "onboarding@resend.dev",
+  await getTransporter().sendMail({
+    from: process.env.GMAIL_USER,
     to: email,
     subject: "Reset your password",
     html: `
@@ -72,9 +68,4 @@ export const sendPasswordResetEmail = async (
       <p>If you didn't request this, you can safely ignore this email.</p>
     `,
   });
-
-  if (error) {
-    console.error("Resend failed to send password reset email:", error);
-    throw new Error(error.message);
-  }
 };

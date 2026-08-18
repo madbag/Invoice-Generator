@@ -20,7 +20,25 @@ export const register = async (req: Request, res: Response) => {
     //if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      if (existingUser.isVerified) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
+      // Account exists but the old verification link expired/was never used —
+      // issue a fresh one instead of leaving them with no way back in
+      const newVerificationToken = crypto.randomBytes(32).toString("hex");
+      existingUser.verificationToken = newVerificationToken;
+      existingUser.verificationTokenExpiry = new Date(
+        Date.now() + 24 * 60 * 60 * 1000,
+      );
+      await existingUser.save();
+
+      await sendVerificationEmail(existingUser.email, newVerificationToken);
+
+      return res.status(200).json({
+        message:
+          "This email is already registered but not verified. We've sent a new verification link.",
+      });
     }
 
     //if no, then hash the password
@@ -61,6 +79,36 @@ export const register = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Registration failed:", err);
     res.status(500).json({ message: "Cannot register the user" });
+  }
+};
+
+// RESEND VERIFICATION EMAIL — lets a stuck user get a fresh link without re-registering
+export const resendVerification = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    // Same generic response either way — avoids leaking whether an email is registered
+    const genericResponse = {
+      message:
+        "If an account with this email exists and isn't verified yet, a new verification link has been sent.",
+    };
+
+    if (!user || user.isVerified) {
+      return res.status(200).json(genericResponse);
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+
+    await sendVerificationEmail(user.email, verificationToken);
+
+    res.status(200).json(genericResponse);
+  } catch (error) {
+    console.error("Resend verification failed:", error);
+    res.status(500).json({ message: "An error occurred. Please try again." });
   }
 };
 
@@ -111,6 +159,13 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    //block sign-in until the user has verified their email
+    if (!existingUser.isVerified) {
+      return res.status(403).json({
+        message: "Please verify your email before signing in.",
+      });
+    }
+
     //create a token so they stay logged in even tho the page is refreshed
     const token = jwt.sign(
       { id: existingUser._id, email: existingUser.email },
@@ -149,7 +204,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { firstName, lastName, email },
+      updates,
       { new: true },
     ).select("-password");
 

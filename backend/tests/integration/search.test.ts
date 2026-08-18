@@ -2,6 +2,9 @@ import request from "supertest";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { app } from "../../app";
+import User from "../../models/User";
+
+jest.mock("../../utils/resentEmail");
 
 process.env.JWT_SECRET = "test_secret";
 
@@ -33,6 +36,10 @@ const loginUser = async () => {
     email: "test@example.com",
     password: "password123",
   });
+  await User.findOneAndUpdate(
+    { email: "test@example.com" },
+    { isVerified: true },
+  );
   const res = await request(app).post("/api/auth/login").send({
     email: "test@example.com",
     password: "password123",

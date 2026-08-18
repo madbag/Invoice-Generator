@@ -1,16 +1,12 @@
 import { sendInvoiceEmail } from "../../utils/resentEmail";
-const mockSend = jest.fn().mockResolvedValue({ id: "mocked-email-id" });
+const mockSendMail = jest.fn().mockResolvedValue({ messageId: "mocked-email-id" });
 
-// mock Resend so no real emails are sent
-jest.mock("resend", () => {
-  return {
-    Resend: jest.fn().mockImplementation(() => ({
-      emails: {
-        send: mockSend,
-      },
-    })),
-  };
-});
+// mock nodemailer so no real emails are sent
+jest.mock("nodemailer", () => ({
+  createTransport: jest.fn().mockImplementation(() => ({
+    sendMail: mockSendMail,
+  })),
+}));
 
 // mock PDFGenerator so no real PDF is generated
 jest.mock("../../utils/pdfGenerator", () => ({
@@ -28,7 +24,9 @@ const sampleInvoice = {
 
 describe("sendInvoiceEmail", () => {
   beforeEach(() => {
-    process.env.RESEND_API_KEY = "test-api-key";
+    process.env.GMAIL_USER = "test@gmail.com";
+    process.env.GMAIL_APP_PASSWORD = "test-app-password";
+    mockSendMail.mockClear();
   });
 
   it("should call PDFGenerator with the invoice", async () => {
@@ -37,12 +35,10 @@ describe("sendInvoiceEmail", () => {
     expect(PDFGenerator).toHaveBeenCalledWith(sampleInvoice);
   });
 
-  it("should call resend.emails.send with correct fields", async () => {
-    // const { Resend } = require("resend");
+  it("should call transporter.sendMail with correct fields", async () => {
     await sendInvoiceEmail(sampleInvoice);
 
-    // const mockSend = Resend.mock.instances[0].emails.send;
-    expect(mockSend).toHaveBeenCalledWith(
+    expect(mockSendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "acme@example.com",
         subject: expect.stringContaining("INV-001"),
