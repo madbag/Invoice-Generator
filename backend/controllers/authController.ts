@@ -33,12 +33,13 @@ export const register = async (req: Request, res: Response) => {
       );
       await existingUser.save();
 
-      // Don't make the client wait on the SMTP round-trip — send it in the background
-      Promise.resolve(
-        sendVerificationEmail(existingUser.email, newVerificationToken),
-      ).catch((err) =>
-        console.error("Failed to send verification email:", err),
-      );
+      // Wait for the send to finish so failures are visible in logs, but
+      // never let an email-provider issue turn into a failed registration
+      try {
+        await sendVerificationEmail(existingUser.email, newVerificationToken);
+      } catch (err) {
+        console.error("Failed to send verification email:", err);
+      }
 
       return res.status(200).json({
         message:
@@ -68,10 +69,13 @@ export const register = async (req: Request, res: Response) => {
       `User ${newUser.firstName} ${newUser.lastName} saved successfully with id ${newUser._id}`,
     );
 
-    // Don't make the client wait on the SMTP round-trip — send it in the background
-    Promise.resolve(
-      sendVerificationEmail(newUser.email, verificationToken),
-    ).catch((err) => console.error("Failed to send verification email:", err));
+    // Wait for the send to finish so failures are visible in logs, but
+    // never let an email-provider issue turn into a failed registration
+    try {
+      await sendVerificationEmail(newUser.email, verificationToken);
+    } catch (err) {
+      console.error("Failed to send verification email:", err);
+    }
 
     //create a token so they stay logged in even tho the page is refreshed
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!, {
@@ -111,7 +115,12 @@ export const resendVerification = async (req: Request, res: Response) => {
     user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save();
 
-    await sendVerificationEmail(user.email, verificationToken);
+    // As above — a failed send shouldn't turn into a failed request
+    try {
+      await sendVerificationEmail(user.email, verificationToken);
+    } catch (err) {
+      console.error("Failed to send verification email:", err);
+    }
 
     res.status(200).json(genericResponse);
   } catch (error) {

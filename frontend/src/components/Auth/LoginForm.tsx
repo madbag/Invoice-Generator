@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
 import { signIn, resendVerification } from "../../api/index.ts";
 import { useAuth } from "../../context/AuthContext.tsx";
@@ -16,7 +16,21 @@ const SignIn: React.FC = () => {
   const { signIn: authSignIn } = useAuth();
   const [searchParams] = useSearchParams();
   const verified = searchParams.get("verified");
-  const registered = searchParams.get("registered");
+  const [showRegisteredNote, setShowRegisteredNote] = useState(
+    searchParams.get("registered") === "true",
+  );
+
+  useEffect(() => {
+    if (!showRegisteredNote) return;
+    const timer = setTimeout(() => setShowRegisteredNote(false), 6000);
+    return () => clearTimeout(timer);
+  }, [showRegisteredNote]);
+
+  useEffect(() => {
+    if (resendStatus !== "sent") return;
+    const timer = setTimeout(() => setResendStatus("idle"), 6000);
+    return () => clearTimeout(timer);
+  }, [resendStatus]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -88,9 +102,9 @@ const SignIn: React.FC = () => {
             Sign in to your account to continue
           </p>
 
-          {registered === "true" && (
-            <div className="bg-green-500/10 text-green-600 p-3 rounded-lg mb-4 text-sm border border-green-500/20">
-              Account created! Please check your email to verify your email id before signing in.
+          {showRegisteredNote && (
+            <div className="bg-green-500/10 text-green-600 p-3 rounded-lg mb-4 text-sm border border-green-500/20 transition-opacity duration-500">
+              Account created! Please check your email to verify your email id.
             </div>
           )}
 
