@@ -68,9 +68,11 @@ export default function CreateInvoice() {
     const saved = localStorage.getItem("invoice");
     if (saved) {
       const parsed = JSON.parse(saved);
-      setInvoiceData(parsed);
+      // Invoice date always tracks today — never restore a stale saved date.
+      setInvoiceData({ ...parsed, form: { ...parsed.form, invoiceDate: today } });
       if (!parsed.invoiceNo) generateInvoiceNo();
     } else {
+      setInvoiceData({ form: { ...form, invoiceDate: today } });
       generateInvoiceNo();
     }
   }, [token]);
@@ -248,13 +250,14 @@ export default function CreateInvoice() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
-              label="Invoice Date *"
+              label="Invoice Date"
               name="invoiceDate"
               type="date"
               value={form.invoiceDate}
               onChange={handleChange}
               error={errors.invoiceDate}
               max={today}
+              disabled
             />
             <div>
               <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
@@ -451,6 +454,7 @@ function FormField({
   type = "text",
   placeholder,
   max,
+  disabled,
 }: {
   label: string;
   name: string;
@@ -460,6 +464,7 @@ function FormField({
   type?: string;
   placeholder?: string;
   max?: string;
+  disabled?: boolean;
 }) {
   return (
     <div>
@@ -473,9 +478,10 @@ function FormField({
         placeholder={placeholder}
         onChange={onChange}
         max={max}
+        disabled={disabled}
         className={`w-full px-4 py-2.5 bg-[var(--secondary)] border rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors ${
-          error ? "border-[var(--destructive)]" : "border-[var(--border)]"
-        }`}
+          disabled ? "cursor-not-allowed opacity-70" : ""
+        } ${error ? "border-[var(--destructive)]" : "border-[var(--border)]"}`}
       />
       {error && <p className="text-xs text-[var(--destructive)] mt-1">{error}</p>}
     </div>

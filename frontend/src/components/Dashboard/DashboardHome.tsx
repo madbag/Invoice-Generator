@@ -108,11 +108,13 @@ export default function DashboardHome() {
     );
   }
 
+  const locked = !user;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className={locked ? "opacity-40 grayscale pointer-events-none select-none" : undefined}>
           <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">
             Welcome
           </h1>
@@ -129,6 +131,13 @@ export default function DashboardHome() {
         </button>
       </div>
 
+      <div
+        className={
+          locked
+            ? "space-y-6 opacity-40 grayscale pointer-events-none select-none"
+            : "space-y-6"
+        }
+      >
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
@@ -227,6 +236,7 @@ export default function DashboardHome() {
             </p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
