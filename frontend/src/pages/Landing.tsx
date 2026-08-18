@@ -26,7 +26,7 @@ const LandingPage = () => {
 
           <p className="text-white/60 text-base sm:text-lg mb-10 max-w-lg">
             Professional invoices for freelancers and small businesses. Bill
-            clients, track payments, and get paid faster — try it now, no
+            clients, track payments, and get paid faster - try it now, no
             account needed.
           </p>
 

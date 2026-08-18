@@ -5,6 +5,7 @@ import Search from "../Search/Search";
 
 interface TopbarProps {
   onMenuClick: () => void;
+  searchDisabled?: boolean;
 }
 
 const SunIcon = () => (
@@ -39,7 +40,7 @@ const MoonIcon = () => (
   </svg>
 );
 
-const Topbar = ({ onMenuClick }: TopbarProps) => {
+const Topbar = ({ onMenuClick, searchDisabled = false }: TopbarProps) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
 
         {/* Search - hidden on small mobile */}
         <div className="hidden sm:block flex-1 max-w-md">
-          <Search />
+          <Search disabled={searchDisabled} />
         </div>
 
         {/* Right section */}

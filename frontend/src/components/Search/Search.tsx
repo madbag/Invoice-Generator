@@ -8,7 +8,7 @@ interface SearchResults {
   clients: any[];
 }
 
-export default function Search() {
+export default function Search({ disabled = false }: { disabled?: boolean }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults>({
     invoices: [],
@@ -35,7 +35,7 @@ export default function Search() {
   }, []);
 
   useEffect(() => {
-    if (!query.trim()) {
+    if (disabled || !query.trim()) {
       setResults({ invoices: [], clients: [] });
       setShowDropdown(false);
       return;
@@ -60,7 +60,7 @@ export default function Search() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query, token]);
+  }, [query, token, disabled]);
 
   const hasResults = results.invoices.length > 0 || results.clients.length > 0;
 
@@ -78,16 +78,21 @@ export default function Search() {
 
   return (
     <div ref={wrapperRef} className="relative w-full">
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg focus-within:border-[var(--primary)] transition-colors">
+      <div
+        className={`flex items-center gap-2 px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg transition-colors ${
+          disabled ? "opacity-50 cursor-not-allowed" : "focus-within:border-[var(--primary)]"
+        }`}
+      >
         <SearchIcon className="w-4 h-4 text-[var(--muted-foreground)]" />
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => !disabled && setQuery(e.target.value)}
           placeholder="Search invoices, clients..."
-          className="w-full bg-transparent outline-none text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]"
+          disabled={disabled}
+          className="w-full bg-transparent outline-none text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] disabled:cursor-not-allowed"
         />
-        {query && (
+        {query && !disabled && (
           <button
             onClick={() => {
               setQuery("");

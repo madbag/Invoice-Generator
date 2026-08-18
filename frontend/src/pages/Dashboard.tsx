@@ -21,7 +21,7 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
-        <Topbar onMenuClick={() => setSidebarOpen(true)} />
+        <Topbar onMenuClick={() => setSidebarOpen(true)} searchDisabled />
 
         {/* Dashboard Content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
