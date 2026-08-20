@@ -4,6 +4,7 @@ import { useContext, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { InvoiceContext } from "../../context/InvoiceContext";
 import { API, downloadInvoicePdf } from "../../api";
+import { getInitials } from "../../utils/initials";
 
 const GUEST_SEND_COUNT_KEY = "guestInvoiceSendCount";
 const GUEST_SEND_LIMIT = 5;
@@ -14,7 +15,7 @@ const getGuestSendCount = () =>
 export default function InvoicePreview() {
   const navigate = useNavigate();
   const invoiceContext = useContext(InvoiceContext);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [loading, setLoading] = useState(false);
   const [guestSendCount, setGuestSendCount] = useState(() =>
@@ -42,6 +43,9 @@ export default function InvoicePreview() {
         contactNumber: form.contactNumber,
         invoiceDate: form.invoiceDate,
         items,
+        profilePicture: user?.profilePicture,
+        profileInitials: user ? getInitials(user) : undefined,
+        businessName: user?.businessDetails?.businessName,
       });
 
       const blob = new Blob([res.data], { type: "application/pdf" });
@@ -213,8 +217,26 @@ export default function InvoicePreview() {
       <div className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-lg">
         {/* Invoice Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div>
+          <div className="flex flex-col md:grid md:grid-cols-3 md:items-center gap-4">
+            <div className="flex items-center gap-4">
+              {user && (
+                <div className="w-14 h-14 rounded-full ring-2 ring-white flex-shrink-0 overflow-hidden flex items-center justify-center bg-white/15">
+                  {user.profilePicture ? (
+                    <img
+                      src={user.profilePicture}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg font-bold text-white">{getInitials(user)}</span>
+                  )}
+                </div>
+              )}
+              {user?.businessDetails?.businessName && (
+                <p className="text-lg font-semibold">{user.businessDetails.businessName}</p>
+              )}
+            </div>
+            <div className="text-center">
               <h2 className="text-3xl font-bold">INVOICE</h2>
               <p className="text-blue-100 mt-1">{invoiceNo}</p>
             </div>

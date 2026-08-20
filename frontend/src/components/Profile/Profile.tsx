@@ -2,17 +2,21 @@ import React, { useEffect, useState } from "react";
 import { getProfile, updateProfile, deleteProfile } from "../../api";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
+import { getInitials } from "../../utils/initials";
 
 interface ProfileData {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
+  profilePicture: string | null;
   businessDetails: {
-    address: string;
+    businessName: string;
     contact: string;
   };
 }
+
+const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024; // 2MB, before base64 inflation
 
 const Field = ({
   label,
@@ -72,7 +76,8 @@ const Profile: React.FC = () => {
     lastName: "",
     email: "",
     password: "",
-    businessDetails: { address: "", contact: "" },
+    profilePicture: null,
+    businessDetails: { businessName: "", contact: "" },
   });
   // Snapshot used to restore data if the user cancels
   const [savedData, setSavedData] = useState<ProfileData>(formData);
@@ -92,8 +97,9 @@ const Profile: React.FC = () => {
           lastName: data.lastName || "",
           email: data.email || "",
           password: "",
+          profilePicture: data.profilePicture || null,
           businessDetails: {
-            address: data.businessDetails?.address || "",
+            businessName: data.businessDetails?.businessName || "",
             contact: data.businessDetails?.contact || "",
           },
         };
@@ -123,6 +129,36 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setMessage({ text: "Please select an image file.", type: "error" });
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      setMessage({ text: "Image must be smaller than 2MB.", type: "error" });
+      return;
+    }
+
+    // Uploading a photo counts as starting an edit, same as typing into any
+    // other field — enters edit mode so Save/Cancel appear if you weren't
+    // already editing.
+    if (!isEditing) handleEdit();
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({ ...prev, profilePicture: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData((prev) => ({ ...prev, profilePicture: null }));
+  };
+
   const handleEdit = () => {
     setSavedData(formData); // take a snapshot before editing
     setIsEditing(true);
@@ -143,8 +179,9 @@ const Profile: React.FC = () => {
         lastName: data.lastName || "",
         email: data.email || "",
         password: "",
+        profilePicture: data.profilePicture || null,
         businessDetails: {
-          address: data.businessDetails?.address || "",
+          businessName: data.businessDetails?.businessName || "",
           contact: data.businessDetails?.contact || "",
         },
       };
@@ -154,6 +191,7 @@ const Profile: React.FC = () => {
         firstName: updated.firstName,
         lastName: updated.lastName,
         email: updated.email,
+        profilePicture: updated.profilePicture,
         businessDetails: updated.businessDetails,
       });
       setIsEditing(false);
@@ -177,10 +215,7 @@ const Profile: React.FC = () => {
     }
   };
 
-  const initials =
-    formData.firstName && formData.lastName
-      ? `${formData.firstName[0]}${formData.lastName[0]}`.toUpperCase()
-      : formData.email?.[0]?.toUpperCase() || "U";
+  const initials = getInitials(formData);
 
   if (loading) {
     return (
@@ -253,8 +288,43 @@ const Profile: React.FC = () => {
         <div className="lg:col-span-1">
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
             <div className="flex flex-col items-center text-center">
-              <div className="w-24 h-24 rounded-full bg-[var(--primary)] flex items-center justify-center mb-4">
-                <span className="text-3xl font-bold text-white">{initials}</span>
+              <div className="relative mb-4">
+                <div className="w-24 h-24 rounded-full bg-white ring-2 ring-[var(--primary)] flex items-center justify-center overflow-hidden">
+                  {formData.profilePicture ? (
+                    <img
+                      src={formData.profilePicture}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl font-bold text-[var(--primary)]">{initials}</span>
+                  )}
+                </div>
+
+                <label
+                  htmlFor="profile-photo-input"
+                  title="Change photo"
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity border-2 border-[var(--card)]"
+                >
+                  <CameraIcon />
+                </label>
+                <input
+                  id="profile-photo-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+                {formData.profilePicture && isEditing && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    title="Remove photo"
+                    className="absolute top-0 right-0 w-6 h-6 rounded-full bg-[var(--destructive)] text-white flex items-center justify-center hover:opacity-90 transition-opacity border-2 border-[var(--card)]"
+                  >
+                    <RemoveIcon />
+                  </button>
+                )}
               </div>
               <h2 className="text-xl font-semibold text-[var(--foreground)]">
                 {formData.firstName} {formData.lastName}
@@ -353,13 +423,12 @@ const Profile: React.FC = () => {
             </p>
             <div className="space-y-4">
               <Field
-                label="Address"
-                name="business.address"
-                value={formData.businessDetails.address}
+                label="Business Name"
+                name="business.businessName"
+                value={formData.businessDetails.businessName}
                 isEditing={isEditing}
                 onChange={handleChange}
-                placeholder="Enter your business address"
-                isTextarea={true}
+                placeholder="Enter your business name"
               />
               <Field
                 label="Contact"
@@ -376,5 +445,18 @@ const Profile: React.FC = () => {
     </div>
   );
 };
+
+const CameraIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const RemoveIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
 
 export default Profile;

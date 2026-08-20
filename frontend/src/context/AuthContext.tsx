@@ -5,10 +5,10 @@ interface User {
   firstName?: string;
   lastName?: string;
   email: string;
+  profilePicture?: string | null;
   businessDetails?: {
-    address?: string;
+    businessName?: string;
     contact?: string;
-    logoUrl?: string;
   };
 }
 

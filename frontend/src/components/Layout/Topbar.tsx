@@ -2,6 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import Search from "../Search/Search";
+import { getInitials } from "../../utils/initials";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -50,10 +51,7 @@ const Topbar = ({ onMenuClick, searchDisabled = false }: TopbarProps) => {
       ? `${user.firstName} ${user.lastName}`
       : user?.email) || "User";
 
-  const initials =
-    user?.firstName && user?.lastName
-      ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
-      : user?.email?.[0]?.toUpperCase() || "U";
+  const initials = getInitials(user);
 
   const handleProfileClick = () => {
     navigate("/dashboard/profile");
@@ -94,8 +92,16 @@ const Topbar = ({ onMenuClick, searchDisabled = false }: TopbarProps) => {
                 onClick={handleProfileClick}
                 className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--secondary)] cursor-pointer transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">{initials}</span>
+                <div className="w-8 h-8 rounded-full bg-white ring-2 ring-[var(--primary)] flex items-center justify-center overflow-hidden">
+                  {user?.profilePicture ? (
+                    <img
+                      src={user.profilePicture}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[var(--primary)] text-sm font-medium">{initials}</span>
+                  )}
                 </div>
                 <span className="hidden md:block text-sm font-medium text-[var(--foreground)]">
                   {displayName}

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { API, downloadInvoicePdf } from "../../api";
+import { getInitials } from "../../utils/initials";
 
 interface Invoice {
   _id: string;
@@ -18,7 +19,7 @@ interface Invoice {
 
 export default function InvoiceList({ limit }: { limit?: number }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
@@ -114,6 +115,9 @@ export default function InvoiceList({ limit }: { limit?: number }) {
         contactNumber: invoice.contactNumber,
         invoiceDate: invoice.invoiceDate,
         items: invoice.items,
+        profilePicture: user?.profilePicture,
+        profileInitials: user ? getInitials(user) : undefined,
+        businessName: user?.businessDetails?.businessName,
       });
 
       const blob = new Blob([res.data], { type: "application/pdf" });
