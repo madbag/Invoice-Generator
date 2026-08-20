@@ -2,9 +2,11 @@ import { useState } from "react";
 import Sidebar from "../components/Layout/Sidebar";
 import Topbar from "../components/Layout/Topbar";
 import { Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className="flex min-h-screen bg-[var(--background)]">
@@ -21,7 +23,10 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
-        <Topbar onMenuClick={() => setSidebarOpen(true)} searchDisabled />
+        <Topbar
+          onMenuClick={() => setSidebarOpen(true)}
+          searchDisabled={!user}
+        />
 
         {/* Dashboard Content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
