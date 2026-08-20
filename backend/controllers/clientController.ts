@@ -42,6 +42,23 @@ export const createClient = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const updateClient = async (req: AuthRequest, res: Response) => {
+  try {
+    const { clientName, clientEmail, clientAddress, contactNumber } = req.body;
+
+    const client = await Client.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user?._id },
+      { clientName, clientEmail, clientAddress, contactNumber },
+      { new: true },
+    );
+
+    if (!client) return res.status(404).json({ error: "Client not found" });
+    res.json(client);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update client" });
+  }
+};
+
 export const deleteClient = async (req: AuthRequest, res: Response) => {
   try {
     await Client.findByIdAndDelete(req.params.id);
