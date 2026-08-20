@@ -1,4 +1,4 @@
-import { Document, Page, View, Text, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 
 const COLORS = {
   blue: "#2563eb",
@@ -19,10 +19,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 50,
     paddingVertical: 28,
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
   },
-  headerTitle: { fontSize: 22, fontFamily: "Helvetica-Bold" },
-  headerInvoiceNo: { fontSize: 11, marginTop: 4 },
+  headerLeft: { flex: 1, flexDirection: "row", alignItems: "center" },
+  headerCenter: { flex: 1, alignItems: "center" },
+  headerRight: { flex: 1, alignItems: "flex-end" },
+  businessName: { fontSize: 14, fontFamily: "Helvetica-Bold" },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: 14,
+    objectFit: "cover",
+    borderWidth: 2,
+    borderColor: "#ffffff",
+  },
+  avatarFallback: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: 14,
+    borderWidth: 2,
+    borderColor: "#ffffff",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarInitials: { color: "#ffffff", fontSize: 15, fontFamily: "Helvetica-Bold" },
+  headerTitle: { fontSize: 22, fontFamily: "Helvetica-Bold", textAlign: "center" },
+  headerInvoiceNo: { fontSize: 11, marginTop: 4, textAlign: "center" },
   headerDateLabel: { fontSize: 9, textAlign: "right" },
   headerDateValue: {
     fontSize: 12,
@@ -101,17 +126,32 @@ interface InvoiceData {
   invoiceDate: string;
   items: InvoiceItem[];
   total: number;
+  profilePicture?: string | null;
+  profileInitials?: string | null;
+  businessName?: string | null;
 }
 
 const InvoiceDocument = ({ invoice }: { invoice: InvoiceData }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerLeft}>
+          {invoice.profilePicture ? (
+            <Image src={invoice.profilePicture} style={styles.avatar} />
+          ) : invoice.profileInitials ? (
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarInitials}>{invoice.profileInitials}</Text>
+            </View>
+          ) : null}
+          {invoice.businessName ? (
+            <Text style={styles.businessName}>{invoice.businessName}</Text>
+          ) : null}
+        </View>
+        <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>INVOICE</Text>
           <Text style={styles.headerInvoiceNo}>{invoice.invoiceNo}</Text>
         </View>
-        <View>
+        <View style={styles.headerRight}>
           <Text style={styles.headerDateLabel}>Invoice Date</Text>
           <Text style={styles.headerDateValue}>
             {formatDate(invoice.invoiceDate)}

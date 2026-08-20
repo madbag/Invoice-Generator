@@ -93,6 +93,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 
     res.json(user);
   } catch (error) {
+    console.error("Failed to fetch profile:", error);
     res.status(500).json({ message: "Failed to fetch profile" });
   }
 };
@@ -100,8 +101,9 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 // UPDATE PROFILE
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const { firstName, lastName, email, password, businessDetails } = req.body;
-    const updates: any = { firstName, lastName, email, businessDetails };
+    const { firstName, lastName, email, password, businessDetails, profilePicture } =
+      req.body;
+    const updates: any = { firstName, lastName, email, businessDetails, profilePicture };
 
     // Only hash + update password if the user actually typed one
     if (password && password.trim() !== "") {

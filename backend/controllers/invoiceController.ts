@@ -7,6 +7,7 @@ import Invoice from "../models/Invoice";
 import { AuthRequest } from "../middleware/auth";
 import { sendInvoiceEmail } from "../utils/resentEmail";
 import { PDFGenerator } from "../utils/pdfGenerator";
+import { getInitials } from "../utils/initials";
 
 // CREATE INVOICE
 export const createInvoice = async (req: AuthRequest, res: Response,) => {
@@ -185,6 +186,9 @@ export const downloadInvoicePdf = async (req: Request, res: Response) => {
       contactNumber,
       invoiceDate,
       items,
+      profilePicture,
+      profileInitials,
+      businessName,
     } = req.body;
 
     if (
@@ -214,6 +218,9 @@ export const downloadInvoicePdf = async (req: Request, res: Response) => {
       invoiceDate,
       items,
       total,
+      profilePicture,
+      profileInitials,
+      businessName,
     });
 
     const safeName =
@@ -236,7 +243,12 @@ export const sendInvoice = async (req: AuthRequest, res: Response) => {
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) return res.status(404).json({ error: "Invoice not found" });
 
-    await sendInvoiceEmail(invoice);
+    await sendInvoiceEmail({
+      ...invoice.toObject(),
+      profilePicture: req.user?.profilePicture,
+      profileInitials: getInitials(req.user),
+      businessName: req.user?.businessDetails?.businessName,
+    });
     res.json({ message: "Invoice sent successfully" });
   } catch (err: any) {
     console.error(err);

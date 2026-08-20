@@ -15,8 +15,9 @@ const UserSchema = new Schema(
       trim: true,
     },
     password: { type: String, required: true },
+    profilePicture: { type: String, default: null },
     businessDetails: {
-      address: String,
+      businessName: String,
       contact: String,
     },
     resetPasswordToken: { type: String, default: null },

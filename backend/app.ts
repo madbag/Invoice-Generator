@@ -10,7 +10,8 @@ export const app: Application = express();
 
 app.use(cors());
 // tells express to turn the body into a json object
-app.use(express.json());
+// raised from the default 100kb so base64-encoded profile pictures fit
+app.use(express.json({ limit: "5mb" }));
 
 // simple route testing
 app.get("/", (req: Request, res: Response) => {
