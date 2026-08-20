@@ -1,41 +1,12 @@
-import dns from "dns";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { PDFGenerator } from "./pdfGenerator";
 
-const GMAIL_HOST = "smtp.gmail.com";
-const GMAIL_PORT = 465;
-
-// Nodemailer resolves both the IPv4 and IPv6 addresses for the SMTP host
-// and picks one at RANDOM to connect to (see its lib/shared/index.js
-// formatDNSValue). Render has no outbound IPv6 route, so whenever it
-// randomly picks smtp.gmail.com's IPv6 address the connection fails with:
-//   Error: connect ENETUNREACH 2a00:1450:...:465 - Local (:::0)
-// Resolving the IPv4 address ourselves and handing Nodemailer the literal
-// IP sidesteps its resolution logic entirely — no more coin flip.
-const getTransporter = async () => {
-  const [ipv4Address] = await dns.promises.resolve4(GMAIL_HOST);
-
-  return nodemailer.createTransport({
-    host: ipv4Address,
-    port: GMAIL_PORT,
-    secure: true,
-    tls: {
-      // keep TLS certificate validation working against the real hostname
-      servername: GMAIL_HOST,
-    },
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  });
-};
-
 export const sendInvoiceEmail = async (invoice: any) => {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const pdfBuffer = await PDFGenerator(invoice);
-  const transporter = await getTransporter();
 
-  await transporter.sendMail({
-    from: process.env.GMAIL_USER,
+  const { error } = await resend.emails.send({
+    from: "onboarding@resend.dev", // use this until you verify a domain
     to: invoice.clientEmail,
     subject: `Invoice ${invoice.invoiceNo} from Your Business`,
     html: `<p>Dear ${invoice.clientName},</p>
@@ -49,18 +20,23 @@ export const sendInvoiceEmail = async (invoice: any) => {
       },
     ],
   });
+
+  if (error) {
+    console.error("Resend failed to send invoice email:", error);
+    throw new Error(error.message);
+  }
 };
 
 export const sendPasswordResetEmail = async (
   email: string,
   resetToken: string,
 ) => {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const baseUrl = process.env.FRONTEND_URL?.replace(/\/$/, "");
   const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
-  const transporter = await getTransporter();
 
-  await transporter.sendMail({
-    from: process.env.GMAIL_USER,
+  const { error } = await resend.emails.send({
+    from: "onboarding@resend.dev",
     to: email,
     subject: "Reset your password",
     html: `
@@ -70,4 +46,9 @@ export const sendPasswordResetEmail = async (
       <p>If you didn't request this, you can safely ignore this email.</p>
     `,
   });
+
+  if (error) {
+    console.error("Resend failed to send password reset email:", error);
+    throw new Error(error.message);
+  }
 };

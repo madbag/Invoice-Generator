@@ -1,18 +1,12 @@
 import { sendInvoiceEmail } from "../../utils/resentEmail";
-const mockSendMail = jest.fn().mockResolvedValue({ messageId: "mocked-email-id" });
 
-// mock nodemailer so no real emails are sent
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn().mockImplementation(() => ({
-    sendMail: mockSendMail,
+const mockSend = jest.fn().mockResolvedValue({ data: { id: "mocked-email-id" }, error: null });
+
+// mock resend so no real emails are sent
+jest.mock("resend", () => ({
+  Resend: jest.fn().mockImplementation(() => ({
+    emails: { send: mockSend },
   })),
-}));
-
-// mock dns so resolving smtp.gmail.com's IPv4 address doesn't hit the network
-jest.mock("dns", () => ({
-  promises: {
-    resolve4: jest.fn().mockResolvedValue(["142.250.1.109"]),
-  },
 }));
 
 // mock PDFGenerator so no real PDF is generated
@@ -31,9 +25,9 @@ const sampleInvoice = {
 
 describe("sendInvoiceEmail", () => {
   beforeEach(() => {
-    process.env.GMAIL_USER = "test@gmail.com";
-    process.env.GMAIL_APP_PASSWORD = "test-app-password";
-    mockSendMail.mockClear();
+    process.env.RESEND_API_KEY = "test-api-key";
+    mockSend.mockClear();
+    mockSend.mockResolvedValue({ data: { id: "mocked-email-id" }, error: null });
   });
 
   it("should call PDFGenerator with the invoice", async () => {
@@ -42,10 +36,10 @@ describe("sendInvoiceEmail", () => {
     expect(PDFGenerator).toHaveBeenCalledWith(sampleInvoice);
   });
 
-  it("should call transporter.sendMail with correct fields", async () => {
+  it("should call resend.emails.send with correct fields", async () => {
     await sendInvoiceEmail(sampleInvoice);
 
-    expect(mockSendMail).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "acme@example.com",
         subject: expect.stringContaining("INV-001"),
@@ -60,5 +54,10 @@ describe("sendInvoiceEmail", () => {
     const { PDFGenerator } = require("../../utils/pdfGenerator");
     PDFGenerator.mockRejectedValueOnce(new Error("PDF failed"));
     await expect(sendInvoiceEmail(sampleInvoice)).rejects.toThrow("PDF failed");
+  });
+
+  it("should throw if Resend returns an error", async () => {
+    mockSend.mockResolvedValueOnce({ data: null, error: { message: "Invalid API key" } });
+    await expect(sendInvoiceEmail(sampleInvoice)).rejects.toThrow("Invalid API key");
   });
 });
