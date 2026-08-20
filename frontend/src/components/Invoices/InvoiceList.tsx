@@ -1,14 +1,17 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { API } from "../../api";
+import { API, downloadInvoicePdf } from "../../api";
 
 interface Invoice {
   _id: string;
   invoiceNo: string;
   clientName: string;
   clientEmail: string;
+  clientAddress: string;
+  contactNumber: string;
   invoiceDate: string;
+  items: { description: string; quantity: number; cost: number }[];
   total: number;
   status: string;
 }
@@ -101,8 +104,31 @@ export default function InvoiceList({ limit }: { limit?: number }) {
     fetchInvoices();
   }, [token, limit]);
 
-  const handleView = (invoiceId: string) => {
-    navigate(`/dashboard/invoice-preview/${invoiceId}`);
+  const handleDownload = async (invoice: Invoice) => {
+    try {
+      const res = await downloadInvoicePdf({
+        invoiceNo: invoice.invoiceNo,
+        clientName: invoice.clientName,
+        clientEmail: invoice.clientEmail,
+        clientAddress: invoice.clientAddress,
+        contactNumber: invoice.contactNumber,
+        invoiceDate: invoice.invoiceDate,
+        items: invoice.items,
+      });
+
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${invoice.invoiceNo}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download PDF", error);
+      alert("Failed to download the invoice PDF. Please try again.");
+    }
   };
 
   const getStatusStyles = (status: string) => {
@@ -312,11 +338,11 @@ export default function InvoiceList({ limit }: { limit?: number }) {
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-end gap-2">
                     <button
-                      onClick={() => handleView(invoice._id)}
+                      onClick={() => handleDownload(invoice)}
                       className="p-2 rounded-lg hover:bg-[var(--secondary)] text-[var(--primary)] transition-colors"
-                      title="View"
+                      title="Download"
                     >
-                      <ViewIcon />
+                      <DownloadIcon />
                     </button>
                     <button
                       onClick={() => handleDelete(invoice._id)}
@@ -421,10 +447,11 @@ export default function InvoiceList({ limit }: { limit?: number }) {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleView(invoice._id)}
+                  onClick={() => handleDownload(invoice)}
                   className="p-2 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]"
+                  title="Download"
                 >
-                  <ViewIcon />
+                  <DownloadIcon />
                 </button>
                 <button
                   onClick={() => handleDelete(invoice._id)}
@@ -473,7 +500,7 @@ const PlusIcon = () => (
   </svg>
 );
 
-const ViewIcon = () => (
+const DownloadIcon = () => (
   <svg
     className="w-5 h-5"
     fill="none"
@@ -484,13 +511,7 @@ const ViewIcon = () => (
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2}
-      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-    />
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
     />
   </svg>
 );
