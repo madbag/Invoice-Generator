@@ -1,13 +1,41 @@
+import { useState } from "react";
+import type { ChangeEvent } from "react";
 import { useClients } from "../../context/ClientContext";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { API } from "../../api";
 
+interface Client {
+  _id: string;
+  clientName: string;
+  clientEmail: string;
+  clientAddress: string;
+  contactNumber: string;
+  invoiceCount?: number;
+  totalBilled?: number;
+}
+
+interface EditFormData {
+  clientName: string;
+  clientEmail: string;
+  clientAddress: string;
+  contactNumber: string;
+}
 
 export default function ClientList() {
   const { clients, fetchClients } = useClients();
   const { token } = useAuth();
   const navigate = useNavigate();
+
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [editForm, setEditForm] = useState<EditFormData>({
+    clientName: "",
+    clientEmail: "",
+    clientAddress: "",
+    contactNumber: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm(
@@ -23,6 +51,45 @@ export default function ClientList() {
     } catch (error) {
       console.error("Error deleting clients:", error);
       alert("Failed to delete client. Please try again");
+    }
+  };
+
+  const handleEditClick = (client: Client) => {
+    setEditError(null);
+    setEditForm({
+      clientName: client.clientName,
+      clientEmail: client.clientEmail,
+      clientAddress: client.clientAddress || "",
+      contactNumber: client.contactNumber || "",
+    });
+    setEditingClient(client);
+  };
+
+  const handleEditChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleEditCancel = () => {
+    setEditingClient(null);
+    setEditError(null);
+  };
+
+  const handleEditSave = async () => {
+    if (!editingClient) return;
+    setSaving(true);
+    setEditError(null);
+
+    try {
+      await API.put(`/clients/${editingClient._id}`, editForm, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await fetchClients();
+      setEditingClient(null);
+    } catch (error) {
+      console.error("Error updating client:", error);
+      setEditError("Failed to update client. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -129,6 +196,13 @@ export default function ClientList() {
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-end gap-2">
                     <button
+                      onClick={() => handleEditClick(client)}
+                      className="p-2 rounded-lg hover:bg-[var(--secondary)] text-[var(--primary)] transition-colors"
+                      title="Edit"
+                    >
+                      <EditIcon />
+                    </button>
+                    <button
                       onClick={() => handleDelete(client._id)}
                       className="p-2 rounded-lg hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors"
                       title="Delete"
@@ -162,12 +236,22 @@ export default function ClientList() {
                   <p className="text-sm text-[var(--muted-foreground)]">{client.clientEmail}</p>
                 </div>
               </div>
-              <button
-                onClick={() => handleDelete(client._id)}
-                className="p-2 rounded-lg bg-[var(--destructive)]/10 text-[var(--destructive)]"
-              >
-                <DeleteIcon />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleEditClick(client)}
+                  className="p-2 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]"
+                  title="Edit"
+                >
+                  <EditIcon />
+                </button>
+                <button
+                  onClick={() => handleDelete(client._id)}
+                  className="p-2 rounded-lg bg-[var(--destructive)]/10 text-[var(--destructive)]"
+                  title="Delete"
+                >
+                  <DeleteIcon />
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[var(--border)]">
               <div>
@@ -190,6 +274,103 @@ export default function ClientList() {
           </div>
         ))}
       </div>
+
+      {/* Edit Client Modal */}
+      {editingClient && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={handleEditCancel}
+        >
+          <div
+            className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+              Edit Client
+            </h2>
+
+            {editError && (
+              <div className="mb-4 p-3 rounded-lg bg-[var(--destructive)]/10 text-[var(--destructive)] text-sm border border-[var(--destructive)]/20">
+                {editError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  name="clientName"
+                  value={editForm.clientName}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="clientEmail"
+                  value={editForm.clientEmail}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  name="clientAddress"
+                  value={editForm.clientAddress}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">
+                  Contact Number
+                </label>
+                <input
+                  type="text"
+                  name="contactNumber"
+                  value={editForm.contactNumber}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6 justify-end">
+              <button
+                onClick={handleEditCancel}
+                className="px-5 py-2.5 border border-[var(--border)] text-[var(--foreground)] rounded-lg font-medium hover:bg-[var(--secondary)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={saving}
+                className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -197,6 +378,12 @@ export default function ClientList() {
 const ClientIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
   </svg>
 );
 
