@@ -13,6 +13,10 @@ interface ProfileData {
   businessDetails: {
     businessName: string;
     contact: string;
+    instagram: string;
+    facebook: string;
+    website: string;
+    other: string;
   };
 }
 
@@ -77,7 +81,14 @@ const Profile: React.FC = () => {
     email: "",
     password: "",
     profilePicture: null,
-    businessDetails: { businessName: "", contact: "" },
+    businessDetails: {
+      businessName: "",
+      contact: "",
+      instagram: "",
+      facebook: "",
+      website: "",
+      other: "",
+    },
   });
   // Snapshot used to restore data if the user cancels
   const [savedData, setSavedData] = useState<ProfileData>(formData);
@@ -101,6 +112,10 @@ const Profile: React.FC = () => {
           businessDetails: {
             businessName: data.businessDetails?.businessName || "",
             contact: data.businessDetails?.contact || "",
+            instagram: data.businessDetails?.instagram || "",
+            facebook: data.businessDetails?.facebook || "",
+            website: data.businessDetails?.website || "",
+            other: data.businessDetails?.other || "",
           },
         };
         setFormData(loaded);
@@ -183,6 +198,10 @@ const Profile: React.FC = () => {
         businessDetails: {
           businessName: data.businessDetails?.businessName || "",
           contact: data.businessDetails?.contact || "",
+          instagram: data.businessDetails?.instagram || "",
+          facebook: data.businessDetails?.facebook || "",
+          website: data.businessDetails?.website || "",
+          other: data.businessDetails?.other || "",
         },
       };
       setFormData(updated);
@@ -437,6 +456,48 @@ const Profile: React.FC = () => {
                 isEditing={isEditing}
                 onChange={handleChange}
                 placeholder="Enter business phone number"
+              />
+            </div>
+          </div>
+
+          {/* Social & Links — all optional, shown on invoices only when filled in */}
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">Social &amp; Links</h3>
+            <p className="text-sm text-[var(--muted-foreground)] mb-4">
+              Optional — shown on your invoices below the thank-you note when filled in
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field
+                label="Instagram Handle"
+                name="business.instagram"
+                value={formData.businessDetails.instagram}
+                isEditing={isEditing}
+                onChange={handleChange}
+                placeholder="@yourbusiness"
+              />
+              <Field
+                label="Facebook Handle"
+                name="business.facebook"
+                value={formData.businessDetails.facebook}
+                isEditing={isEditing}
+                onChange={handleChange}
+                placeholder="@yourbusiness"
+              />
+              <Field
+                label="Website"
+                name="business.website"
+                value={formData.businessDetails.website}
+                isEditing={isEditing}
+                onChange={handleChange}
+                placeholder="www.yourbusiness.com"
+              />
+              <Field
+                label="Other"
+                name="business.other"
+                value={formData.businessDetails.other}
+                isEditing={isEditing}
+                onChange={handleChange}
+                placeholder="Any other link or handle"
               />
             </div>
           </div>

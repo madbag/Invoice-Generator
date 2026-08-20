@@ -124,10 +124,9 @@ export default function CreateInvoice() {
     const newErrors: FieldErrors = { items: {} };
     if (!form.clientName.trim())
       newErrors.clientName = "Client Name is required";
-    if (!form.clientAddress.trim())
-      newErrors.clientAddress = "Client Address is required";
-    if (!form.clientEmail.trim() || !form.clientEmail.includes("@"))
-      newErrors.clientEmail = "Valid email required";
+    // Email and address are optional — only validate format if something was typed
+    if (form.clientEmail.trim() && !form.clientEmail.includes("@"))
+      newErrors.clientEmail = "Enter a valid email";
     if (!form.contactNumber.trim() || isNaN(Number(form.contactNumber)))
       newErrors.contactNumber = "Contact number invalid";
     if (!form.invoiceDate) newErrors.invoiceDate = "Invoice date required";
@@ -222,18 +221,18 @@ export default function CreateInvoice() {
               error={errors.clientName}
             />
             <FormField
-              label="Client Email *"
+              label="Client Email"
               name="clientEmail"
               value={form.clientEmail}
-              placeholder="Enter client email"
+              placeholder="Enter client email (optional)"
               onChange={handleChange}
               error={errors.clientEmail}
             />
             <FormField
-              label="Client Address *"
+              label="Client Address"
               name="clientAddress"
               value={form.clientAddress}
-              placeholder="Enter client address"
+              placeholder="Enter client address (optional)"
               onChange={handleChange}
               error={errors.clientAddress}
             />

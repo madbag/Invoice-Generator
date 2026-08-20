@@ -46,6 +46,12 @@ export default function InvoicePreview() {
         profilePicture: user?.profilePicture,
         profileInitials: user ? getInitials(user) : undefined,
         businessName: user?.businessDetails?.businessName,
+        ownerEmail: user?.email,
+        businessContact: user?.businessDetails?.contact,
+        instagram: user?.businessDetails?.instagram,
+        facebook: user?.businessDetails?.facebook,
+        website: user?.businessDetails?.website,
+        other: user?.businessDetails?.other,
       });
 
       const blob = new Blob([res.data], { type: "application/pdf" });
@@ -80,6 +86,17 @@ export default function InvoicePreview() {
   };
 
   const handleGuestConfirm = async () => {
+    // Guest sending has no "save for later" — email is the only way this
+    // invoice ever reaches anyone, so it can't be skipped here like it can
+    // for signed-in users.
+    if (!form.clientEmail.trim()) {
+      setMessage({
+        text: "Client email is required to send this invoice.",
+        type: "error",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       await API.post("/invoices/guest-send", {
@@ -141,26 +158,35 @@ export default function InvoicePreview() {
         }
       );
 
-      await API.post(
+      const sendRes = await API.post(
         `/invoices/${res.data._id}/send`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      await API.post(
-        "/clients",
-        {
-          clientName: form.clientName,
-          clientEmail: form.clientEmail,
-          clientAddress: form.clientAddress,
-          contactNumber: form.contactNumber,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // Client records are keyed by email — nothing to save/dedupe against
+      // without one, so skip it rather than failing the whole confirm step.
+      if (form.clientEmail.trim()) {
+        await API.post(
+          "/clients",
+          {
+            clientName: form.clientName,
+            clientEmail: form.clientEmail,
+            clientAddress: form.clientAddress,
+            contactNumber: form.contactNumber,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
 
-      setMessage({ text: `Invoice saved & sent to ${form.clientEmail}!`, type: "success" });
+      setMessage({
+        text: sendRes.data?.sent
+          ? `Invoice saved & sent to ${form.clientEmail}!`
+          : "Invoice saved. No client email on file, so it wasn't sent.",
+        type: "success",
+      });
 
       resetInvoice();
 
@@ -178,6 +204,23 @@ export default function InvoicePreview() {
   const handleBack = () => {
     navigate(-1);
   };
+
+  const businessLine = [
+    user?.businessDetails?.businessName,
+    user?.email,
+    user?.businessDetails?.contact,
+  ]
+    .filter(Boolean)
+    .join("   •   ");
+
+  const socialLine = [
+    user?.businessDetails?.instagram ? `Instagram: ${user.businessDetails.instagram}` : null,
+    user?.businessDetails?.facebook ? `Facebook: ${user.businessDetails.facebook}` : null,
+    user?.businessDetails?.website ? `Website: ${user.businessDetails.website}` : null,
+    user?.businessDetails?.other,
+  ]
+    .filter(Boolean)
+    .join("   •   ");
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -259,8 +302,6 @@ export default function InvoicePreview() {
           <div className="mb-8">
             <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Bill To</p>
             <h3 className="text-xl font-semibold text-gray-900">{form.clientName}</h3>
-            <p className="text-gray-600">{form.clientEmail}</p>
-            <p className="text-gray-600">{form.clientAddress}</p>
             {form.contactNumber && (
               <p className="text-gray-600">{form.contactNumber}</p>
             )}
@@ -323,6 +364,8 @@ export default function InvoicePreview() {
           {/* Footer */}
           <div className="mt-12 pt-8 border-t border-gray-200 text-center text-gray-500 text-sm">
             <p>Thank you for your business!</p>
+            {businessLine && <p className="mt-0.5">{businessLine}</p>}
+            {socialLine && <p className="mt-0.5">{socialLine}</p>}
           </div>
         </div>
       </div>

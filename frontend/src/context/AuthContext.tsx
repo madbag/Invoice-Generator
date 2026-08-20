@@ -9,6 +9,10 @@ interface User {
   businessDetails?: {
     businessName?: string;
     contact?: string;
+    instagram?: string;
+    facebook?: string;
+    website?: string;
+    other?: string;
   };
 }
 

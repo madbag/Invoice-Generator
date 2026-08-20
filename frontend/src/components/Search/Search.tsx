@@ -135,7 +135,7 @@ export default function Search({ disabled = false }: { disabled?: boolean }) {
                       {inv.invoiceNo}
                     </p>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      {inv.clientName} · {inv.clientEmail}
+                      {inv.clientEmail ? `${inv.clientName} · ${inv.clientEmail}` : inv.clientName}
                     </p>
                   </div>
                   <span

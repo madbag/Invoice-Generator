@@ -8,8 +8,8 @@ interface Invoice {
   _id: string;
   invoiceNo: string;
   clientName: string;
-  clientEmail: string;
-  clientAddress: string;
+  clientEmail?: string;
+  clientAddress?: string;
   contactNumber: string;
   invoiceDate: string;
   items: { description: string; quantity: number; cost: number }[];
@@ -118,6 +118,12 @@ export default function InvoiceList({ limit }: { limit?: number }) {
         profilePicture: user?.profilePicture,
         profileInitials: user ? getInitials(user) : undefined,
         businessName: user?.businessDetails?.businessName,
+        ownerEmail: user?.email,
+        businessContact: user?.businessDetails?.contact,
+        instagram: user?.businessDetails?.instagram,
+        facebook: user?.businessDetails?.facebook,
+        website: user?.businessDetails?.website,
+        other: user?.businessDetails?.other,
       });
 
       const blob = new Blob([res.data], { type: "application/pdf" });
@@ -314,9 +320,11 @@ export default function InvoiceList({ limit }: { limit?: number }) {
                     <p className="text-sm text-[var(--foreground)]">
                       {invoice.clientName}
                     </p>
-                    <p className="text-xs text-[var(--muted-foreground)]">
-                      {invoice.clientEmail}
-                    </p>
+                    {invoice.clientEmail && (
+                      <p className="text-xs text-[var(--muted-foreground)]">
+                        {invoice.clientEmail}
+                      </p>
+                    )}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-[var(--muted-foreground)]">
