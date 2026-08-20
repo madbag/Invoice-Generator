@@ -51,27 +51,6 @@ export const sendInvoiceEmail = async (invoice: any) => {
   });
 };
 
-export const sendVerificationEmail = async (
-  email: string,
-  verificationToken: string,
-) => {
-  const baseUrl = process.env.BACKEND_URL?.replace(/\/$/, "");
-  const verifyLink = `${baseUrl}/api/auth/verify-email?token=${verificationToken}`;
-  const transporter = await getTransporter();
-
-  await transporter.sendMail({
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: "Verify your email address",
-    html: `
-      <p>Welcome! Please confirm your email address to activate your account.</p>
-      <p>Click the link below — it expires in 24 hours.</p>
-      <a href="${verifyLink}">Verify Email</a>
-      <p>If you didn't create this account, you can safely ignore this email.</p>
-    `,
-  });
-};
-
 export const sendPasswordResetEmail = async (
   email: string,
   resetToken: string,

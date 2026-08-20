@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getProfile, updateProfile, deleteProfile,forgotPassword, resetPassword, verifyEmail, resendVerification } from '../controllers/authController';
+import { register, login, getProfile, updateProfile, deleteProfile,forgotPassword, resetPassword } from '../controllers/authController';
 
 import auth from '../middleware/auth';
 
@@ -7,8 +7,6 @@ const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.get("/verify-email", verifyEmail);
-router.post("/resend-verification", resendVerification);
 router.post("/forgot-password", forgotPassword);
 
 router.get("/profile", auth, getProfile);
