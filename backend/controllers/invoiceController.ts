@@ -29,8 +29,6 @@ export const createInvoice = async (req: AuthRequest, res: Response,) => {
     if (
       !invoiceNo ||
       !clientName ||
-      !clientEmail ||
-      !clientAddress ||
       !contactNumber ||
       !invoiceDate ||
       !items
@@ -143,7 +141,6 @@ export const sendGuestInvoice = async (req: Request, res: Response) => {
       !invoiceNo ||
       !clientName ||
       !clientEmail ||
-      !clientAddress ||
       !contactNumber ||
       !items
     ) {
@@ -189,13 +186,17 @@ export const downloadInvoicePdf = async (req: Request, res: Response) => {
       profilePicture,
       profileInitials,
       businessName,
+      ownerEmail,
+      businessContact,
+      instagram,
+      facebook,
+      website,
+      other,
     } = req.body;
 
     if (
       !invoiceNo ||
       !clientName ||
-      !clientEmail ||
-      !clientAddress ||
       !contactNumber ||
       !invoiceDate ||
       !items
@@ -221,6 +222,12 @@ export const downloadInvoicePdf = async (req: Request, res: Response) => {
       profilePicture,
       profileInitials,
       businessName,
+      ownerEmail,
+      businessContact,
+      instagram,
+      facebook,
+      website,
+      other,
     });
 
     const safeName =
@@ -243,13 +250,28 @@ export const sendInvoice = async (req: AuthRequest, res: Response) => {
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) return res.status(404).json({ error: "Invoice not found" });
 
+    // Client email is optional now — nothing to send it to, so skip the
+    // email step rather than letting Resend fail on a missing recipient.
+    if (!invoice.clientEmail) {
+      return res.json({
+        message: "Invoice saved. No client email on file, so it wasn't sent.",
+        sent: false,
+      });
+    }
+
     await sendInvoiceEmail({
       ...invoice.toObject(),
       profilePicture: req.user?.profilePicture,
       profileInitials: getInitials(req.user),
       businessName: req.user?.businessDetails?.businessName,
+      ownerEmail: req.user?.email,
+      businessContact: req.user?.businessDetails?.contact,
+      instagram: req.user?.businessDetails?.instagram,
+      facebook: req.user?.businessDetails?.facebook,
+      website: req.user?.businessDetails?.website,
+      other: req.user?.businessDetails?.other,
     });
-    res.json({ message: "Invoice sent successfully" });
+    res.json({ message: "Invoice sent successfully", sent: true });
   } catch (err: any) {
     console.error(err);
     res.status(500).json({ error: "Failed to send invoice" });

@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    marginRight: 14,
+    marginRight: 6,
     objectFit: "cover",
     borderWidth: 2,
     borderColor: "#ffffff",
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    marginRight: 14,
+    marginRight: 6,
     borderWidth: 2,
     borderColor: "#ffffff",
     backgroundColor: "rgba(255, 255, 255, 0.15)",
@@ -91,8 +91,19 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 13, fontFamily: "Helvetica-Bold", marginRight: 20 },
   totalValue: { fontSize: 14, fontFamily: "Helvetica-Bold", color: COLORS.blue },
+  footerContainer: {
+    position: "absolute",
+    bottom: 30,
+    left: 50,
+    right: 50,
+  },
   footer: {
-    marginTop: 40,
+    textAlign: "center",
+    fontSize: 9,
+    color: COLORS.gray500,
+  },
+  socialLine: {
+    marginTop: 2,
     textAlign: "center",
     fontSize: 9,
     color: COLORS.gray500,
@@ -120,7 +131,7 @@ interface InvoiceItem {
 interface InvoiceData {
   invoiceNo: string;
   clientName: string;
-  clientEmail: string;
+  clientEmail?: string;
   clientAddress?: string;
   contactNumber?: string;
   invoiceDate: string;
@@ -129,81 +140,106 @@ interface InvoiceData {
   profilePicture?: string | null;
   profileInitials?: string | null;
   businessName?: string | null;
+  ownerEmail?: string | null;
+  businessContact?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  website?: string | null;
+  other?: string | null;
 }
 
-const InvoiceDocument = ({ invoice }: { invoice: InvoiceData }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          {invoice.profilePicture ? (
-            <Image src={invoice.profilePicture} style={styles.avatar} />
-          ) : invoice.profileInitials ? (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarInitials}>{invoice.profileInitials}</Text>
-            </View>
-          ) : null}
-          {invoice.businessName ? (
-            <Text style={styles.businessName}>{invoice.businessName}</Text>
-          ) : null}
-        </View>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>INVOICE</Text>
-          <Text style={styles.headerInvoiceNo}>{invoice.invoiceNo}</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <Text style={styles.headerDateLabel}>Invoice Date</Text>
-          <Text style={styles.headerDateValue}>
-            {formatDate(invoice.invoiceDate)}
-          </Text>
-        </View>
-      </View>
+const InvoiceDocument = ({ invoice }: { invoice: InvoiceData }) => {
+  const businessLine = [
+    invoice.businessName,
+    invoice.ownerEmail,
+    invoice.businessContact,
+  ]
+    .filter(Boolean)
+    .join("   •   ");
 
-      <View style={styles.body}>
-        <View style={styles.billTo}>
-          <Text style={styles.billToLabel}>BILL TO</Text>
-          <Text style={styles.clientName}>{invoice.clientName}</Text>
-          <Text style={styles.clientDetail}>{invoice.clientEmail}</Text>
-          {invoice.clientAddress ? (
-            <Text style={styles.clientDetail}>{invoice.clientAddress}</Text>
-          ) : null}
-          {invoice.contactNumber ? (
-            <Text style={styles.clientDetail}>{invoice.contactNumber}</Text>
-          ) : null}
-        </View>
+  const socialLine = [
+    invoice.instagram ? `Instagram: ${invoice.instagram}` : null,
+    invoice.facebook ? `Facebook: ${invoice.facebook}` : null,
+    invoice.website ? `Website: ${invoice.website}` : null,
+    invoice.other,
+  ]
+    .filter(Boolean)
+    .join("   •   ");
 
-        <View style={styles.table}>
-          <View style={styles.tableHeaderRow}>
-            <Text style={[styles.headerCell, styles.colDescription]}>
-              DESCRIPTION
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            {invoice.profilePicture ? (
+              <Image src={invoice.profilePicture} style={styles.avatar} />
+            ) : invoice.profileInitials ? (
+              <View style={styles.avatarFallback}>
+                <Text style={styles.avatarInitials}>{invoice.profileInitials}</Text>
+              </View>
+            ) : null}
+            {invoice.businessName ? (
+              <Text style={styles.businessName}>{invoice.businessName}</Text>
+            ) : null}
+          </View>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>INVOICE</Text>
+            <Text style={styles.headerInvoiceNo}>{invoice.invoiceNo}</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <Text style={styles.headerDateLabel}>Invoice Date</Text>
+            <Text style={styles.headerDateValue}>
+              {formatDate(invoice.invoiceDate)}
             </Text>
-            <Text style={[styles.headerCell, styles.colQty]}>QTY</Text>
-            <Text style={[styles.headerCell, styles.colPrice]}>PRICE</Text>
-            <Text style={[styles.headerCell, styles.colTotal]}>TOTAL</Text>
+          </View>
+        </View>
+
+        <View style={styles.body}>
+          <View style={styles.billTo}>
+            <Text style={styles.billToLabel}>BILL TO</Text>
+            <Text style={styles.clientName}>{invoice.clientName}</Text>
+            {invoice.contactNumber ? (
+              <Text style={styles.clientDetail}>{invoice.contactNumber}</Text>
+            ) : null}
           </View>
 
-          {invoice.items.map((item, index) => (
-            <View style={styles.tableRow} key={index} wrap={false}>
-              <Text style={styles.colDescription}>{item.description}</Text>
-              <Text style={styles.colQty}>{item.quantity}</Text>
-              <Text style={styles.colPrice}>{eur(item.cost)}</Text>
-              <Text style={styles.colTotalCell}>
-                {eur(item.quantity * item.cost)}
+          <View style={styles.table}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.headerCell, styles.colDescription]}>
+                DESCRIPTION
               </Text>
+              <Text style={[styles.headerCell, styles.colQty]}>QTY</Text>
+              <Text style={[styles.headerCell, styles.colPrice]}>PRICE</Text>
+              <Text style={[styles.headerCell, styles.colTotal]}>TOTAL</Text>
             </View>
-          ))}
+
+            {invoice.items.map((item, index) => (
+              <View style={styles.tableRow} key={index} wrap={false}>
+                <Text style={styles.colDescription}>{item.description}</Text>
+                <Text style={styles.colQty}>{item.quantity}</Text>
+                <Text style={styles.colPrice}>{eur(item.cost)}</Text>
+                <Text style={styles.colTotalCell}>
+                  {eur(item.quantity * item.cost)}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.totalSection}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalValue}>{eur(invoice.total)}</Text>
+          </View>
         </View>
 
-        <View style={styles.totalSection}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>{eur(invoice.total)}</Text>
+        <View style={styles.footerContainer} fixed>
+          <Text style={styles.footer}>Thank you for your business!</Text>
+          {businessLine ? <Text style={styles.socialLine}>{businessLine}</Text> : null}
+          {socialLine ? <Text style={styles.socialLine}>{socialLine}</Text> : null}
         </View>
-
-        <Text style={styles.footer}>Thank you for your business!</Text>
-      </View>
-    </Page>
-  </Document>
-);
+      </Page>
+    </Document>
+  );
+};
 
 export const PDFGenerator = (invoice: InvoiceData): Promise<Buffer> => {
   if (!invoice || !Array.isArray(invoice.items)) {

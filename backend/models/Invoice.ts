@@ -4,8 +4,8 @@ const invoiceSchema = new Schema(
   {
     invoiceNo: { type: String, required: true },
     clientName: { type: String, required: true },
-    clientEmail: { type: String, required: true },
-    clientAddress: { type: String, required: true },
+    clientEmail: { type: String },
+    clientAddress: { type: String },
     contactNumber: { type: String, required: true },
     invoiceDate: { type: String, required: true },
     items: { type: Array, required: true },

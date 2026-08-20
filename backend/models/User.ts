@@ -19,6 +19,10 @@ const UserSchema = new Schema(
     businessDetails: {
       businessName: String,
       contact: String,
+      instagram: String,
+      facebook: String,
+      website: String,
+      other: String,
     },
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpiry: { type: Date, default: null },
