@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { InvoiceContext } from "../../context/InvoiceContext";
 import { API, downloadInvoicePdf } from "../../api";
 import { getInitials } from "../../utils/initials";
+import { openPdfBlob } from "../../utils/downloadPdf";
 
 const GUEST_SEND_COUNT_KEY = "guestInvoiceSendCount";
 const GUEST_SEND_LIMIT = 5;
@@ -54,15 +55,7 @@ export default function InvoicePreview() {
         other: user?.businessDetails?.other,
       });
 
-      const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${invoiceNo}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      openPdfBlob(res.data, `${invoiceNo}.pdf`);
     } catch (error) {
       console.error("Failed to download PDF", error);
       setMessage({ text: "Failed to download PDF. Please try again.", type: "error" });
@@ -261,7 +254,7 @@ export default function InvoicePreview() {
         {/* Invoice Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8">
           <div className="flex flex-col md:grid md:grid-cols-3 md:items-center gap-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               {user && (
                 <div className="w-14 h-14 rounded-full ring-2 ring-white flex-shrink-0 overflow-hidden flex items-center justify-center bg-white/15">
                   {user.profilePicture ? (

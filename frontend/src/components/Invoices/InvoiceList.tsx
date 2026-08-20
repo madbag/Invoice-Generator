@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { API, downloadInvoicePdf } from "../../api";
 import { getInitials } from "../../utils/initials";
+import { openPdfBlob } from "../../utils/downloadPdf";
 
 interface Invoice {
   _id: string;
@@ -126,15 +127,7 @@ export default function InvoiceList({ limit }: { limit?: number }) {
         other: user?.businessDetails?.other,
       });
 
-      const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${invoice.invoiceNo}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      openPdfBlob(res.data, `${invoice.invoiceNo}.pdf`);
     } catch (error) {
       console.error("Failed to download PDF", error);
       alert("Failed to download the invoice PDF. Please try again.");
