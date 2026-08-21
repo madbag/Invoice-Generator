@@ -275,14 +275,14 @@ const Profile: React.FC = () => {
               className="flex items-center gap-2 text-sm px-4 py-2.5 border border-[var(--destructive)]/30 text-[var(--destructive)] rounded-lg font-medium hover:bg-[var(--destructive)]/10 transition-colors"
             >
               <TrashIcon />
-              Delete Profile
+              Delete Account
             </button>
             <button
               onClick={handleEdit}
               className="flex items-center gap-2 text-sm px-4 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
             >
               <EditIcon />
-              Edit Profile
+              Edit
             </button>
           </div>
         ) : (
@@ -380,9 +380,6 @@ const Profile: React.FC = () => {
               <LinkIcon />
               Social &amp; Links
             </h3>
-            <p className="text-sm text-[var(--muted-foreground)] mb-4">
-              Optional — shown on your invoices below the thank-you note when filled in
-            </p>
             <div className="space-y-4">
               <Field
                 label="Instagram Handle"
