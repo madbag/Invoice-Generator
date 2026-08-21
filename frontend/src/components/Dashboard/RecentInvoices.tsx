@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "../../utils/currency";
 
 interface Invoice {
   _id: string;
@@ -12,9 +13,10 @@ interface Invoice {
 
 interface RecentInvoicesProps {
   invoices: Invoice[];
+  currency?: string;
 }
 
-export default function RecentInvoices({ invoices }: RecentInvoicesProps) {
+export default function RecentInvoices({ invoices, currency }: RecentInvoicesProps) {
   const navigate = useNavigate();
 
   const getStatusStyles = (status: string) => {
@@ -85,7 +87,7 @@ export default function RecentInvoices({ invoices }: RecentInvoicesProps) {
             <div className="flex items-center gap-3 flex-shrink-0">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium text-[var(--foreground)]">
-                  {invoice.total.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                  {formatCurrency(invoice.total, currency)}
                 </p>
                 <p className="text-xs text-[var(--muted-foreground)]">
                   {new Date(invoice.invoiceDate).toLocaleDateString()}

@@ -13,6 +13,7 @@ interface User {
     facebook?: string;
     website?: string;
     other?: string;
+    currency?: string;
   };
 }
 

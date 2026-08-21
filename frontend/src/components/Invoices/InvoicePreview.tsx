@@ -7,6 +7,7 @@ import { API, downloadInvoicePdf } from "../../api";
 import { getInitials } from "../../utils/initials";
 import { openPdfBlob } from "../../utils/downloadPdf";
 import { shareInvoicePdf } from "../../utils/whatsapp";
+import { formatCurrency } from "../../utils/currency";
 
 const GUEST_SEND_COUNT_KEY = "guestInvoiceSendCount";
 const GUEST_SEND_LIMIT = 5;
@@ -43,6 +44,7 @@ export default function InvoicePreview() {
     contactNumber: form.contactNumber,
     invoiceDate: form.invoiceDate,
     items,
+    currency: user?.businessDetails?.currency,
     profilePicture: user?.profilePicture,
     profileInitials: user ? getInitials(user) : undefined,
     businessName: user?.businessDetails?.businessName,
@@ -65,7 +67,7 @@ export default function InvoicePreview() {
   };
 
   const handleShareWhatsApp = async () => {
-    const amount = total.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+    const amount = formatCurrency(total, user?.businessDetails?.currency);
     const message = `Hi ${form.clientName}, here's invoice ${invoiceNo} for ${amount}.`;
     try {
       const res = await downloadInvoicePdf(buildPdfPayload());
@@ -348,10 +350,10 @@ export default function InvoicePreview() {
                     <td className="py-4 text-gray-900">{item.description}</td>
                     <td className="py-4 text-center text-gray-600">{item.quantity}</td>
                     <td className="py-4 text-right text-gray-600">
-                      {item.cost.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                      {formatCurrency(item.cost, user?.businessDetails?.currency)}
                     </td>
                     <td className="py-4 text-right font-medium text-gray-900">
-                      {(item.quantity * item.cost).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                      {formatCurrency(item.quantity * item.cost, user?.businessDetails?.currency)}
                     </td>
                   </tr>
                 ))}
@@ -365,13 +367,13 @@ export default function InvoicePreview() {
               <div className="flex justify-between py-2 border-t border-gray-200">
                 <span className="text-gray-600">Subtotal</span>
                 <span className="font-medium text-gray-900">
-                  {total.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                  {formatCurrency(total, user?.businessDetails?.currency)}
                 </span>
               </div>
               <div className="flex justify-between py-3 border-t-2 border-gray-900 mt-2">
                 <span className="text-lg font-semibold text-gray-900">Total</span>
                 <span className="text-lg font-bold text-blue-600">
-                  {total.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                  {formatCurrency(total, user?.businessDetails?.currency)}
                 </span>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { useClients } from "../../context/ClientContext";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { API } from "../../api";
+import { formatCurrency } from "../../utils/currency";
 
 interface Client {
   _id: string;
@@ -24,7 +25,7 @@ interface EditFormData {
 
 export default function ClientList() {
   const { clients, fetchClients } = useClients();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
 
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -190,7 +191,7 @@ export default function ClientList() {
                 </td>
                 <td className="px-6 py-4">
                   <span className="font-medium text-[var(--foreground)]">
-                    {(client.totalBilled || 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                    {formatCurrency(client.totalBilled || 0, user?.businessDetails?.currency)}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -261,7 +262,7 @@ export default function ClientList() {
               <div>
                 <p className="text-xs text-[var(--muted-foreground)]">Total Billed</p>
                 <p className="font-medium text-[var(--foreground)]">
-                  {(client.totalBilled || 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                  {formatCurrency(client.totalBilled || 0, user?.businessDetails?.currency)}
                 </p>
               </div>
               {client.contactNumber && (

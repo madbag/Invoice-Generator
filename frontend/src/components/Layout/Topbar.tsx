@@ -47,14 +47,19 @@ const Topbar = ({ onMenuClick, searchDisabled = false }: TopbarProps) => {
   const navigate = useNavigate();
 
   const displayName =
-    (user?.firstName && user?.lastName
-      ? `${user.firstName} ${user.lastName}`
-      : user?.email) || "User";
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.email ||
+    "User";
 
   const initials = getInitials(user);
 
   const handleProfileClick = () => {
     navigate("/dashboard/profile");
+  };
+
+  const handleLogout = () => {
+    signOut();
+    navigate("/signin", { replace: true });
   };
 
   return (
@@ -110,7 +115,7 @@ const Topbar = ({ onMenuClick, searchDisabled = false }: TopbarProps) => {
 
               {/* Logout button */}
               <button
-                onClick={signOut}
+                onClick={handleLogout}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--destructive)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
               >
                 <LogoutIcon />

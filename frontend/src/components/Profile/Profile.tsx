@@ -17,10 +17,17 @@ interface ProfileData {
     facebook: string;
     website: string;
     other: string;
+    currency: string;
   };
 }
 
 const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024; // 2MB, before base64 inflation
+
+const CURRENCY_LABELS: Record<string, string> = {
+  EUR: "Euro (€)",
+  INR: "Rupee (₹)",
+  USD: "Dollar ($)",
+};
 
 const Field = ({
   label,
@@ -88,6 +95,7 @@ const Profile: React.FC = () => {
       facebook: "",
       website: "",
       other: "",
+      currency: "",
     },
   });
   // Snapshot used to restore data if the user cancels
@@ -116,6 +124,7 @@ const Profile: React.FC = () => {
             facebook: data.businessDetails?.facebook || "",
             website: data.businessDetails?.website || "",
             other: data.businessDetails?.other || "",
+            currency: data.businessDetails?.currency || "",
           },
         };
         setFormData(loaded);
@@ -131,7 +140,9 @@ const Profile: React.FC = () => {
     fetchProfile();
   }, [token]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     if (name.startsWith("business.")) {
       const field = name.split(".")[1];
@@ -202,6 +213,7 @@ const Profile: React.FC = () => {
           facebook: data.businessDetails?.facebook || "",
           website: data.businessDetails?.website || "",
           other: data.businessDetails?.other || "",
+          currency: data.businessDetails?.currency || "",
         },
       };
       setFormData(updated);
@@ -257,12 +269,22 @@ const Profile: React.FC = () => {
 
         {/* Edit / Save / Cancel buttons */}
         {!isEditing ? (
-          <button
-            onClick={handleEdit}
-            className=" text-sm px-4 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
-          >
-            Edit Profile
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-2 text-sm px-4 py-2.5 border border-[var(--destructive)]/30 text-[var(--destructive)] rounded-lg font-medium hover:bg-[var(--destructive)]/10 transition-colors"
+            >
+              <TrashIcon />
+              Delete Profile
+            </button>
+            <button
+              onClick={handleEdit}
+              className="flex items-center gap-2 text-sm px-4 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+            >
+              <EditIcon />
+              Edit Profile
+            </button>
+          </div>
         ) : (
           <div className="flex gap-3">
             <button
@@ -305,10 +327,10 @@ const Profile: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card — left column, read-only summary */}
         <div className="lg:col-span-1">
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-sm p-6">
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-4">
-                <div className="w-24 h-24 rounded-full bg-white ring-2 ring-[var(--primary)] flex items-center justify-center overflow-hidden">
+                <div className="w-24 h-24 rounded-full bg-white ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-[var(--card)] flex items-center justify-center overflow-hidden">
                   {formData.profilePicture ? (
                     <img
                       src={formData.profilePicture}
@@ -349,45 +371,63 @@ const Profile: React.FC = () => {
                 {formData.firstName} {formData.lastName}
               </h2>
               <p className="text-sm text-[var(--muted-foreground)] mt-1">{formData.email}</p>
-
-              <div className="w-full mt-6 pt-6 border-t border-[var(--border)] text-left space-y-3">
-                <div>
-                  <p className="text-xs text-[var(--muted-foreground)]">Member Since</p>
-                  <p className="text-sm text-[var(--foreground)]">
-                    {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--muted-foreground)]">Account Status</p>
-                  <span className="inline-flex items-center gap-1.5 text-sm text-[var(--accent)]">
-                    <span className="w-2 h-2 bg-[var(--accent)] rounded-full" />
-                    Active
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Danger Zone */}
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 mt-6">
-            <h3 className="text-lg font-semibold text-[var(--destructive)] mb-2">Danger Zone</h3>
+          {/* Social & Links — all optional, shown on invoices only when filled in */}
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-sm p-6 mt-6">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-[var(--foreground)] mb-1">
+              <LinkIcon />
+              Social &amp; Links
+            </h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-4">
-              Once you delete your account, there is no going back.
+              Optional — shown on your invoices below the thank-you note when filled in
             </p>
-            <button
-              onClick={handleDelete}
-              className="w-full px-4 py-2 bg-[var(--destructive)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
-            >
-              Delete Account
-            </button>
+            <div className="space-y-4">
+              <Field
+                label="Instagram Handle"
+                name="business.instagram"
+                value={formData.businessDetails.instagram}
+                isEditing={isEditing}
+                onChange={handleChange}
+                placeholder="@yourbusiness"
+              />
+              <Field
+                label="Facebook Handle"
+                name="business.facebook"
+                value={formData.businessDetails.facebook}
+                isEditing={isEditing}
+                onChange={handleChange}
+                placeholder="@yourbusiness"
+              />
+              <Field
+                label="Website"
+                name="business.website"
+                value={formData.businessDetails.website}
+                isEditing={isEditing}
+                onChange={handleChange}
+                placeholder="www.yourbusiness.com"
+              />
+              <Field
+                label="Other"
+                name="business.other"
+                value={formData.businessDetails.other}
+                isEditing={isEditing}
+                onChange={handleChange}
+                placeholder="Any other link or handle"
+              />
+            </div>
           </div>
         </div>
 
         {/* Right column — Personal + Business fields */}
         <div className="lg:col-span-2 space-y-6">
           {/* Personal Information */}
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">Personal Information</h3>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-sm p-6">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-[var(--foreground)] mb-4">
+              <UserIcon />
+              Personal Information
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field
                 label="First Name"
@@ -435,8 +475,11 @@ const Profile: React.FC = () => {
           </div>
 
           {/* Business Details */}
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1"> Your Business Details</h3>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-sm p-6">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-[var(--foreground)] mb-1">
+              <BriefcaseIcon />
+              Your Business Details
+            </h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-4">
               These details will appear on your invoices
             </p>
@@ -457,48 +500,30 @@ const Profile: React.FC = () => {
                 onChange={handleChange}
                 placeholder="Enter business phone number"
               />
-            </div>
-          </div>
-
-          {/* Social & Links — all optional, shown on invoices only when filled in */}
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">Social &amp; Links</h3>
-            <p className="text-sm text-[var(--muted-foreground)] mb-4">
-              Optional — shown on your invoices below the thank-you note when filled in
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field
-                label="Instagram Handle"
-                name="business.instagram"
-                value={formData.businessDetails.instagram}
-                isEditing={isEditing}
-                onChange={handleChange}
-                placeholder="@yourbusiness"
-              />
-              <Field
-                label="Facebook Handle"
-                name="business.facebook"
-                value={formData.businessDetails.facebook}
-                isEditing={isEditing}
-                onChange={handleChange}
-                placeholder="@yourbusiness"
-              />
-              <Field
-                label="Website"
-                name="business.website"
-                value={formData.businessDetails.website}
-                isEditing={isEditing}
-                onChange={handleChange}
-                placeholder="www.yourbusiness.com"
-              />
-              <Field
-                label="Other"
-                name="business.other"
-                value={formData.businessDetails.other}
-                isEditing={isEditing}
-                onChange={handleChange}
-                placeholder="Any other link or handle"
-              />
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">
+                  Currency
+                </label>
+                {isEditing ? (
+                  <select
+                    name="business.currency"
+                    value={formData.businessDetails.currency}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-[var(--secondary)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                  >
+                    <option value="">Select currency</option>
+                    <option value="EUR">Euro (€)</option>
+                    <option value="INR">Rupee (₹)</option>
+                    <option value="USD">Dollar ($)</option>
+                  </select>
+                ) : (
+                  <p className="text-[var(--foreground)] py-2.5 px-1 border-b border-[var(--border)]">
+                    {CURRENCY_LABELS[formData.businessDetails.currency] || (
+                      <span className="text-[var(--muted-foreground)] italic">Edit profile to set currency</span>
+                    )}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -506,6 +531,36 @@ const Profile: React.FC = () => {
     </div>
   );
 };
+
+const EditIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  </svg>
+);
+
+const UserIcon = () => (
+  <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
+const BriefcaseIcon = () => (
+  <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m-2 0h12a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2z" />
+  </svg>
+);
+
+const LinkIcon = () => (
+  <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5M10.172 13.828a4 4 0 010-5.656l3-3a4 4 0 015.656 5.656l-1.5 1.5" />
+  </svg>
+);
 
 const CameraIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

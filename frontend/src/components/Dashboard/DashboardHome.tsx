@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useClients } from "../../context/ClientContext";
+import { formatCurrency } from "../../utils/currency";
 
 import StatsCard from "./StatsCard";
 import ClientRevenueChart from "./ClientRevenueChart";
@@ -142,40 +143,28 @@ export default function DashboardHome() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total Revenue"
-          value={stats.totalRevenue.toLocaleString("de-DE", {
-            style: "currency",
-            currency: "EUR",
-          })}
+          value={formatCurrency(stats.totalRevenue, user?.businessDetails?.currency)}
           subtitle={`From ${stats.totalInvoices} invoices`}
           icon={<RevenueIcon />}
           color="blue"
         />
         <StatsCard
           title="Paid"
-          value={stats.paidRevenue.toLocaleString("de-DE", {
-            style: "currency",
-            currency: "EUR",
-          })}
+          value={formatCurrency(stats.paidRevenue, user?.businessDetails?.currency)}
           subtitle={`${stats.paidInvoices} paid invoices`}
           icon={<CheckIcon />}
           color="green"
         />
         <StatsCard
           title="Pending"
-          value={stats.pendingRevenue.toLocaleString("de-DE", {
-            style: "currency",
-            currency: "EUR",
-          })}
+          value={formatCurrency(stats.pendingRevenue, user?.businessDetails?.currency)}
           subtitle={`${stats.pendingInvoices} pending invoices`}
           icon={<ClockIcon />}
           color="amber"
         />
         <StatsCard
           title="Overdue"
-          value={stats.overdueRevenue.toLocaleString("de-DE", {
-            style: "currency",
-            currency: "EUR",
-          })}
+          value={formatCurrency(stats.overdueRevenue, user?.businessDetails?.currency)}
           subtitle={`${stats.overdueInvoices} overdue invoices`}
           icon={<AlertIcon />}
           color="red"
@@ -193,10 +182,11 @@ export default function DashboardHome() {
               invoiceCount: c.invoiceCount || 0,
             })) || []
           }
+          currency={user?.businessDetails?.currency}
         />
 
         {/* Recent Invoices */}
-        <RecentInvoices invoices={invoices.slice(0, 5)} />
+        <RecentInvoices invoices={invoices.slice(0, 5)} currency={user?.businessDetails?.currency} />
       </div>
 
       {/* Quick Stats */}

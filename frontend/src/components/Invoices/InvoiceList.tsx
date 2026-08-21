@@ -5,6 +5,7 @@ import { API, downloadInvoicePdf } from "../../api";
 import { getInitials } from "../../utils/initials";
 import { openPdfBlob } from "../../utils/downloadPdf";
 import { shareInvoicePdf } from "../../utils/whatsapp";
+import { formatCurrency } from "../../utils/currency";
 
 interface Invoice {
   _id: string;
@@ -115,6 +116,7 @@ export default function InvoiceList({ limit }: { limit?: number }) {
     contactNumber: invoice.contactNumber,
     invoiceDate: invoice.invoiceDate,
     items: invoice.items,
+    currency: user?.businessDetails?.currency,
     profilePicture: user?.profilePicture,
     profileInitials: user ? getInitials(user) : undefined,
     businessName: user?.businessDetails?.businessName,
@@ -137,10 +139,7 @@ export default function InvoiceList({ limit }: { limit?: number }) {
   };
 
   const handleShareWhatsApp = async (invoice: Invoice) => {
-    const amount = invoice.total?.toLocaleString("de-DE", {
-      style: "currency",
-      currency: "EUR",
-    });
+    const amount = formatCurrency(invoice.total, user?.businessDetails?.currency);
     const message = `Hi ${invoice.clientName}, here's invoice ${invoice.invoiceNo} for ${amount}.`;
     try {
       const res = await downloadInvoicePdf(buildPdfPayload(invoice));
@@ -342,10 +341,7 @@ export default function InvoiceList({ limit }: { limit?: number }) {
                 </td>
                 <td className="px-6 py-4">
                   <span className="font-medium text-[var(--foreground)]">
-                    {invoice.total?.toLocaleString("de-DE", {
-                      style: "currency",
-                      currency: "EUR",
-                    })}
+                    {formatCurrency(invoice.total, user?.businessDetails?.currency)}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -465,10 +461,7 @@ export default function InvoiceList({ limit }: { limit?: number }) {
             <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
               <div>
                 <p className="text-lg font-semibold text-[var(--foreground)]">
-                  {invoice.total?.toLocaleString("de-DE", {
-                    style: "currency",
-                    currency: "EUR",
-                  })}
+                  {formatCurrency(invoice.total, user?.businessDetails?.currency)}
                 </p>
                 <p className="text-xs text-[var(--muted-foreground)]">
                   {new Date(invoice.invoiceDate).toLocaleDateString()}

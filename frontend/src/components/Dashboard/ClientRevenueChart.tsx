@@ -1,3 +1,5 @@
+import { formatCurrency } from "../../utils/currency";
+
 interface ClientRevenue {
   clientName: string;
   totalBilled: number;
@@ -6,9 +8,10 @@ interface ClientRevenue {
 
 interface ClientRevenueChartProps {
   clients: ClientRevenue[];
+  currency?: string;
 }
 
-export default function ClientRevenueChart({ clients }: ClientRevenueChartProps) {
+export default function ClientRevenueChart({ clients, currency }: ClientRevenueChartProps) {
   const totalRevenue = clients.reduce((sum, c) => sum + c.totalBilled, 0);
   const maxRevenue = Math.max(...clients.map((c) => c.totalBilled), 1);
 
@@ -43,7 +46,7 @@ export default function ClientRevenueChart({ clients }: ClientRevenueChartProps)
         </h3>
         <div className="text-right">
           <p className="text-2xl font-bold text-[var(--foreground)]">
-            {totalRevenue.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+            {formatCurrency(totalRevenue, currency)}
           </p>
           <p className="text-xs text-[var(--muted-foreground)]">Total Revenue</p>
         </div>
@@ -68,7 +71,7 @@ export default function ClientRevenueChart({ clients }: ClientRevenueChartProps)
                     {client.invoiceCount} invoice{client.invoiceCount !== 1 ? "s" : ""}
                   </span>
                   <span className="font-medium text-[var(--foreground)]">
-                    {client.totalBilled.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                    {formatCurrency(client.totalBilled, currency)}
                   </span>
                 </div>
               </div>

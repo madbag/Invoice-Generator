@@ -5,6 +5,7 @@ import { InvoiceContext } from "../../context/InvoiceContext";
 import { useAuth } from "../../context/AuthContext";
 import { useClients } from "../../context/ClientContext";
 import { API } from "../../api";
+import { formatCurrency } from "../../utils/currency";
 
 const blockNonNumericKeys = (e: React.KeyboardEvent<HTMLInputElement>) => {
   if (["e", "E", "+", "-"].includes(e.key)) {
@@ -26,7 +27,7 @@ type FieldErrors = {
 export default function CreateInvoice() {
   const invoiceContext = useContext(InvoiceContext)!;
   const { form, items, invoiceNo, setInvoiceData } = invoiceContext;
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
 
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -204,7 +205,7 @@ export default function CreateInvoice() {
                 <option value="">-- Select client or fill manually --</option>
                 {clients.map((c) => (
                   <option key={c._id} value={c._id}>
-                    {c.clientName} ({c.clientEmail})
+                    {c.clientName} ({c.contactNumber})
                   </option>
                 ))}
               </select>
@@ -344,7 +345,7 @@ export default function CreateInvoice() {
                       />
                     </td>
                     <td className="py-3 text-right text-[var(--foreground)] font-medium">
-                      {(item.quantity * item.cost).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                      {formatCurrency(item.quantity * item.cost, user?.businessDetails?.currency)}
                     </td>
                     <td className="py-3 pl-3">
                       <button
@@ -410,7 +411,7 @@ export default function CreateInvoice() {
                   <div>
                     <label className="text-xs text-[var(--muted-foreground)]">Total</label>
                     <p className="px-3 py-2 font-medium text-[var(--foreground)]">
-                      {(item.quantity * item.cost).toFixed(2)}
+                      {formatCurrency(item.quantity * item.cost, user?.businessDetails?.currency)}
                     </p>
                   </div>
                 </div>
@@ -433,7 +434,7 @@ export default function CreateInvoice() {
             <div>
               <p className="text-sm text-[var(--muted-foreground)]">Grand Total</p>
               <p className="text-3xl font-bold text-[var(--foreground)]">
-                {calculateTotal().toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
+                {formatCurrency(calculateTotal(), user?.businessDetails?.currency)}
               </p>
             </div>
             <div className="flex gap-3">
