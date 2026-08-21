@@ -6,6 +6,7 @@ import { InvoiceContext } from "../../context/InvoiceContext";
 import { API, downloadInvoicePdf } from "../../api";
 import { getInitials } from "../../utils/initials";
 import { openPdfBlob } from "../../utils/downloadPdf";
+import { shareInvoicePdf } from "../../utils/whatsapp";
 
 const GUEST_SEND_COUNT_KEY = "guestInvoiceSendCount";
 const GUEST_SEND_LIMIT = 5;
@@ -34,31 +35,44 @@ export default function InvoicePreview() {
 
   const { invoiceNo, form, items, total } = invoiceContext;
 
+  const buildPdfPayload = () => ({
+    invoiceNo,
+    clientName: form.clientName,
+    clientEmail: form.clientEmail,
+    clientAddress: form.clientAddress,
+    contactNumber: form.contactNumber,
+    invoiceDate: form.invoiceDate,
+    items,
+    profilePicture: user?.profilePicture,
+    profileInitials: user ? getInitials(user) : undefined,
+    businessName: user?.businessDetails?.businessName,
+    ownerEmail: user?.email,
+    businessContact: user?.businessDetails?.contact,
+    instagram: user?.businessDetails?.instagram,
+    facebook: user?.businessDetails?.facebook,
+    website: user?.businessDetails?.website,
+    other: user?.businessDetails?.other,
+  });
+
   const handleDownloadPDF = async () => {
     try {
-      const res = await downloadInvoicePdf({
-        invoiceNo,
-        clientName: form.clientName,
-        clientEmail: form.clientEmail,
-        clientAddress: form.clientAddress,
-        contactNumber: form.contactNumber,
-        invoiceDate: form.invoiceDate,
-        items,
-        profilePicture: user?.profilePicture,
-        profileInitials: user ? getInitials(user) : undefined,
-        businessName: user?.businessDetails?.businessName,
-        ownerEmail: user?.email,
-        businessContact: user?.businessDetails?.contact,
-        instagram: user?.businessDetails?.instagram,
-        facebook: user?.businessDetails?.facebook,
-        website: user?.businessDetails?.website,
-        other: user?.businessDetails?.other,
-      });
-
+      const res = await downloadInvoicePdf(buildPdfPayload());
       openPdfBlob(res.data, `${invoiceNo}.pdf`);
     } catch (error) {
       console.error("Failed to download PDF", error);
       setMessage({ text: "Failed to download PDF. Please try again.", type: "error" });
+    }
+  };
+
+  const handleShareWhatsApp = async () => {
+    const amount = total.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+    const message = `Hi ${form.clientName}, here's invoice ${invoiceNo} for ${amount}.`;
+    try {
+      const res = await downloadInvoicePdf(buildPdfPayload());
+      await shareInvoicePdf(res.data, `${invoiceNo}.pdf`, form.contactNumber, message);
+    } catch (error) {
+      console.error("Failed to share invoice PDF", error);
+      setMessage({ text: "Failed to prepare the invoice PDF for sharing. Please try again.", type: "error" });
     }
   };
 
@@ -227,13 +241,22 @@ export default function InvoicePreview() {
             Review before sending to client
           </p>
         </div>
-        <button
-          onClick={handleDownloadPDF}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 border border-[var(--border)] text-[var(--foreground)] rounded-lg font-medium hover:bg-[var(--secondary)] transition-colors"
-        >
-          <DownloadIcon />
-          Download PDF
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleDownloadPDF}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 border border-[var(--border)] text-[var(--foreground)] rounded-lg font-medium hover:bg-[var(--secondary)] transition-colors"
+          >
+            <DownloadIcon />
+            Download PDF
+          </button>
+          <button
+            onClick={handleShareWhatsApp}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 border border-[var(--border)] text-[var(--foreground)] rounded-lg font-medium hover:bg-[var(--secondary)] transition-colors"
+          >
+            <WhatsAppIcon />
+            Share via WhatsApp
+          </button>
+        </div>
       </div>
 
       {/* Message */}
@@ -405,6 +428,13 @@ export default function InvoicePreview() {
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+  </svg>
+);
+
+const WhatsAppIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+    <path d="M12.004 2C6.486 2 2 6.486 2 12.004c0 1.891.516 3.66 1.414 5.176L2 22l4.938-1.394A9.94 9.94 0 0012.004 22C17.522 22 22 17.514 22 12.004 22 6.486 17.522 2 12.004 2zm0 18.083a8.06 8.06 0 01-4.29-1.239l-.308-.183-3.096.874.83-3.033-.201-.318a8.075 8.075 0 01-1.259-4.18c0-4.464 3.633-8.096 8.096-8.096 4.463 0 8.096 3.632 8.096 8.096 0 4.463-3.633 8.079-8.096 8.079z" />
   </svg>
 );
 

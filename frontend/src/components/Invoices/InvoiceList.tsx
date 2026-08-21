@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { API, downloadInvoicePdf } from "../../api";
 import { getInitials } from "../../utils/initials";
 import { openPdfBlob } from "../../utils/downloadPdf";
+import { shareInvoicePdf } from "../../utils/whatsapp";
 
 interface Invoice {
   _id: string;
@@ -106,31 +107,47 @@ export default function InvoiceList({ limit }: { limit?: number }) {
     fetchInvoices();
   }, [token, limit]);
 
+  const buildPdfPayload = (invoice: Invoice) => ({
+    invoiceNo: invoice.invoiceNo,
+    clientName: invoice.clientName,
+    clientEmail: invoice.clientEmail,
+    clientAddress: invoice.clientAddress,
+    contactNumber: invoice.contactNumber,
+    invoiceDate: invoice.invoiceDate,
+    items: invoice.items,
+    profilePicture: user?.profilePicture,
+    profileInitials: user ? getInitials(user) : undefined,
+    businessName: user?.businessDetails?.businessName,
+    ownerEmail: user?.email,
+    businessContact: user?.businessDetails?.contact,
+    instagram: user?.businessDetails?.instagram,
+    facebook: user?.businessDetails?.facebook,
+    website: user?.businessDetails?.website,
+    other: user?.businessDetails?.other,
+  });
+
   const handleDownload = async (invoice: Invoice) => {
     try {
-      const res = await downloadInvoicePdf({
-        invoiceNo: invoice.invoiceNo,
-        clientName: invoice.clientName,
-        clientEmail: invoice.clientEmail,
-        clientAddress: invoice.clientAddress,
-        contactNumber: invoice.contactNumber,
-        invoiceDate: invoice.invoiceDate,
-        items: invoice.items,
-        profilePicture: user?.profilePicture,
-        profileInitials: user ? getInitials(user) : undefined,
-        businessName: user?.businessDetails?.businessName,
-        ownerEmail: user?.email,
-        businessContact: user?.businessDetails?.contact,
-        instagram: user?.businessDetails?.instagram,
-        facebook: user?.businessDetails?.facebook,
-        website: user?.businessDetails?.website,
-        other: user?.businessDetails?.other,
-      });
-
+      const res = await downloadInvoicePdf(buildPdfPayload(invoice));
       openPdfBlob(res.data, `${invoice.invoiceNo}.pdf`);
     } catch (error) {
       console.error("Failed to download PDF", error);
       alert("Failed to download the invoice PDF. Please try again.");
+    }
+  };
+
+  const handleShareWhatsApp = async (invoice: Invoice) => {
+    const amount = invoice.total?.toLocaleString("de-DE", {
+      style: "currency",
+      currency: "EUR",
+    });
+    const message = `Hi ${invoice.clientName}, here's invoice ${invoice.invoiceNo} for ${amount}.`;
+    try {
+      const res = await downloadInvoicePdf(buildPdfPayload(invoice));
+      await shareInvoicePdf(res.data, `${invoice.invoiceNo}.pdf`, invoice.contactNumber, message);
+    } catch (error) {
+      console.error("Failed to share invoice PDF", error);
+      alert("Failed to prepare the invoice PDF for sharing. Please try again.");
     }
   };
 
@@ -350,6 +367,13 @@ export default function InvoiceList({ limit }: { limit?: number }) {
                       <DownloadIcon />
                     </button>
                     <button
+                      onClick={() => handleShareWhatsApp(invoice)}
+                      className="p-2 rounded-lg hover:bg-[var(--secondary)] text-[var(--primary)] transition-colors"
+                      title="Share via WhatsApp"
+                    >
+                      <WhatsAppIcon />
+                    </button>
+                    <button
                       onClick={() => handleDelete(invoice._id)}
                       className="p-2 rounded-lg hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors"
                       title="Delete"
@@ -459,6 +483,13 @@ export default function InvoiceList({ limit }: { limit?: number }) {
                   <DownloadIcon />
                 </button>
                 <button
+                  onClick={() => handleShareWhatsApp(invoice)}
+                  className="p-2 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]"
+                  title="Share via WhatsApp"
+                >
+                  <WhatsAppIcon />
+                </button>
+                <button
                   onClick={() => handleDelete(invoice._id)}
                   className="p-2 rounded-lg bg-[var(--destructive)]/10 text-[var(--destructive)]"
                 >
@@ -518,6 +549,13 @@ const DownloadIcon = () => (
       strokeWidth={2}
       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
     />
+  </svg>
+);
+
+const WhatsAppIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+    <path d="M12.004 2C6.486 2 2 6.486 2 12.004c0 1.891.516 3.66 1.414 5.176L2 22l4.938-1.394A9.94 9.94 0 0012.004 22C17.522 22 22 17.514 22 12.004 22 6.486 17.522 2 12.004 2zm0 18.083a8.06 8.06 0 01-4.29-1.239l-.308-.183-3.096.874.83-3.033-.201-.318a8.075 8.075 0 01-1.259-4.18c0-4.464 3.633-8.096 8.096-8.096 4.463 0 8.096 3.632 8.096 8.096 0 4.463-3.633 8.079-8.096 8.079z" />
   </svg>
 );
 
