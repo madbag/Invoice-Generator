@@ -23,6 +23,7 @@ const UserSchema = new Schema(
       facebook: String,
       website: String,
       other: String,
+      currency: { type: String, enum: ["EUR", "INR", "USD"] },
     },
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpiry: { type: Date, default: null },

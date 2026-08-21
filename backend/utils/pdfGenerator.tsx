@@ -110,8 +110,25 @@ const styles = StyleSheet.create({
   },
 });
 
-const eur = (amount: number) =>
-  amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+const CURRENCY_LOCALES: Record<string, string> = {
+  EUR: "de-DE",
+  INR: "en-IN",
+  USD: "en-US",
+};
+
+// No currency is assumed until the user picks one in their profile — with
+// none selected yet, amounts print as a plain number rather than guessing a
+// currency for them.
+const formatAmount = (amount: number, currency?: string) => {
+  const locale = currency ? CURRENCY_LOCALES[currency] : undefined;
+  if (!currency || !locale) {
+    return amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+  return amount.toLocaleString(locale, { style: "currency", currency });
+};
 
 const formatDate = (date: string) => {
   if (!date) return "-";
@@ -137,6 +154,7 @@ interface InvoiceData {
   invoiceDate: string;
   items: InvoiceItem[];
   total: number;
+  currency?: string;
   profilePicture?: string | null;
   profileInitials?: string | null;
   businessName?: string | null;
@@ -217,9 +235,9 @@ const InvoiceDocument = ({ invoice }: { invoice: InvoiceData }) => {
               <View style={styles.tableRow} key={index} wrap={false}>
                 <Text style={styles.colDescription}>{item.description}</Text>
                 <Text style={styles.colQty}>{item.quantity}</Text>
-                <Text style={styles.colPrice}>{eur(item.cost)}</Text>
+                <Text style={styles.colPrice}>{formatAmount(item.cost, invoice.currency)}</Text>
                 <Text style={styles.colTotalCell}>
-                  {eur(item.quantity * item.cost)}
+                  {formatAmount(item.quantity * item.cost, invoice.currency)}
                 </Text>
               </View>
             ))}
@@ -227,7 +245,7 @@ const InvoiceDocument = ({ invoice }: { invoice: InvoiceData }) => {
 
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>{eur(invoice.total)}</Text>
+            <Text style={styles.totalValue}>{formatAmount(invoice.total, invoice.currency)}</Text>
           </View>
         </View>
 

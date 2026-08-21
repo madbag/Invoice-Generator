@@ -183,6 +183,7 @@ export const downloadInvoicePdf = async (req: Request, res: Response) => {
       contactNumber,
       invoiceDate,
       items,
+      currency,
       profilePicture,
       profileInitials,
       businessName,
@@ -219,6 +220,7 @@ export const downloadInvoicePdf = async (req: Request, res: Response) => {
       invoiceDate,
       items,
       total,
+      currency,
       profilePicture,
       profileInitials,
       businessName,
@@ -270,6 +272,7 @@ export const sendInvoice = async (req: AuthRequest, res: Response) => {
       facebook: req.user?.businessDetails?.facebook,
       website: req.user?.businessDetails?.website,
       other: req.user?.businessDetails?.other,
+      currency: req.user?.businessDetails?.currency,
     });
     res.json({ message: "Invoice sent successfully", sent: true });
   } catch (err: any) {
