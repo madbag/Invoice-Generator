@@ -1,9 +1,9 @@
 # 🧾 Invoice Generator
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
-![React](https://img.shields.io/badge/react-18-blue)
+![React](https://img.shields.io/badge/react-19-blue)
 ![MongoDB](https://img.shields.io/badge/database-MongoDB-green)
 
-A full-stack Invoice Generator web application built with the **MERN Stack** (MongoDB, Express, React, Node.js). The application allows users to create invoices, preview them, generate a PDF, and send the invoice directly to a client's email.
+A full-stack Invoice Generator web application built with the **MERN Stack** (MongoDB, Express, React, Node.js). The application lets users create invoices, manage clients, preview and download invoices as PDF, and send them directly to a client's email or share them via WhatsApp — with a dashboard for revenue and invoice-status analytics. A guest (no account) can also create and send a limited number of invoices without signing up.
 
 This project demonstrates full-stack development including authentication, REST API design, database integration, and email functionality.
 
@@ -24,7 +24,9 @@ This project demonstrates full-stack development including authentication, REST 
   - [Features](#features)
     - [Authentication](#authentication)
     - [Invoice Management](#invoice-management)
-    - [Email Functionality](#email-functionality)
+    - [Client Management](#client-management)
+    - [Dashboard \& Search](#dashboard--search)
+    - [Sharing \& Email](#sharing--email)
     - [User Profile](#user-profile)
     - [UI](#ui)
   - [Tech Stack](#tech-stack)
@@ -40,8 +42,9 @@ This project demonstrates full-stack development including authentication, REST 
   - [Environment Variables](#environment-variables)
   - [API Endpoints](#api-endpoints)
     - [Authentication](#authentication-1)
-    - [User Profile](#user-profile-1)
     - [Invoices](#invoices)
+    - [Clients](#clients)
+    - [Search](#search)
   - [Key Concepts Demonstrated](#key-concepts-demonstrated)
   - [Troubleshooting](#troubleshooting)
   - [Future Improvements](#future-improvements)
@@ -61,30 +64,43 @@ The goal of this project was to build a real-world business tool while demonstra
 ## Features
 
 ### Authentication
-- User registration
-- Secure login using JWT authentication
+- User registration and secure login using JWT authentication
+- Forgot-password / reset-password flow via emailed reset link
 - Protected routes using middleware
+- Guest mode: create and send up to 5 invoices without an account before being prompted to sign up
 
 ### Invoice Management
-- Create invoices with multiple line items
-- Automatically calculate subtotals, tax, and grand totals
-- Edit and update existing invoices
-- Preview invoices before sending
-- Save invoices to MongoDB
+- Create invoices with multiple line items, with real-time subtotal/grand-total calculation
+- A new invoice always starts blank — no leftover data from a previous invoice
+- Auto-generated, sequential invoice numbers per account
+- Pick an existing client to auto-fill their details, or enter them manually
+- Track invoice status (Pending / Paid / Overdue) from the invoice list
+- Preview an invoice before sending, download it as a PDF, or delete it
+- Invoices are saved to MongoDB, scoped to the signed-in user
 
-### Email Functionality
-- Generate invoice as a PDF
-- Send invoice directly to client email via Resend
-- Custom email message option
+### Client Management
+- Save, edit, and delete clients tied to your account
+- Reuse a saved client's details when creating a new invoice
+
+### Dashboard & Search
+- Revenue and invoice-status stats (total / paid / pending / overdue)
+- Client revenue breakdown chart and a list of recent invoices
+- Search across invoices and clients
+
+### Sharing & Email
+- Generate an invoice as a PDF (via `@react-pdf/renderer`) and download it
+- Send an invoice directly to the client's email via Resend
+- Share the invoice PDF over WhatsApp (native share sheet on supported devices, with a `wa.me` chat fallback)
 
 ### User Profile
-- Manage user information
-- User-specific invoice storage
+- Manage business details (name, contact, social links) and profile picture
+- Choose a display currency (USD / EUR / INR) used across invoices and the dashboard
+- Light/dark theme toggle
 
 ### UI
 - Dynamic invoice form with real-time total calculation
-- Invoice preview modal
-- Clean and responsive interface
+- Responsive invoice preview and PDF layout
+- Clean, responsive Tailwind CSS interface
 
 ---
 
@@ -92,10 +108,11 @@ The goal of this project was to build a real-world business tool while demonstra
 
 | Layer | Technologies |
 |-------|-------------|
-| **Frontend** | React, TypeScript, Tailwind CSS, Context API |
-| **Backend** | Node.js, Express.js, JWT Authentication, Resend |
+| **Frontend** | React 19, TypeScript, React Router, Tailwind CSS 4, Context API, Axios, Vite |
+| **Backend** | Node.js, Express 5, JWT Authentication, bcryptjs, Zod, Resend, `@react-pdf/renderer` |
 | **Database** | MongoDB, Mongoose ODM |
-| **Tools** | Git, GitHub, Postman, npm |
+| **Testing** | Vitest + React Testing Library (frontend), Jest + Supertest + mongodb-memory-server (backend) |
+| **Tools** | Git, GitHub, npm |
 
 ---
 
@@ -105,19 +122,21 @@ The goal of this project was to build a real-world business tool while demonstra
 invoice-generator/
 │
 ├── frontend/
-│   ├── api/
-│   ├── assets/
-│   ├── components/
-│   ├── pages/
-│   ├── context/
-│   └── utils/
+│   └── src/
+│       ├── api/         # Axios client
+│       ├── components/  # Auth, Clients, Dashboard, Invoices, Layout, Profile, Search
+│       ├── pages/       # Route-level pages (Landing, Login, Signup, Dashboard)
+│       ├── context/     # Auth, Client, Invoice, Theme contexts
+│       ├── utils/       # currency, PDF download, WhatsApp share, initials
+│       └── tests/       # Vitest component/unit tests
 │
 ├── backend/
 │   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── middleware/
-│   └── utils/
+│   ├── models/       # User, Client, Invoice (Mongoose)
+│   ├── routes/       # auth, invoices, clients, search
+│   ├── middleware/   # JWT auth guard, error handler
+│   ├── utils/         # PDF generation, email sending, initials
+│   └── tests/         # Jest integration + unit tests
 │
 └── README.md
 ```
@@ -131,7 +150,7 @@ Make sure you have the following installed before running the project:
 - [Node.js](https://nodejs.org/) v18 or higher
 - [npm](https://www.npmjs.com/) v9 or higher
 - free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
-- A Gmail account with an [App Password](https://support.google.com/accounts/answer/185833) enabled (required for Resend)
+- A [Resend](https://resend.com/) account and API key (used to send invoice and password-reset emails)
 
 ---
 
@@ -160,11 +179,7 @@ npm install
 
 ### 4. Configure environment variables
 
-Copy the example env file and fill in your values (see [Environment Variables](#environment-variables)):
-
-```bash
-cp backend/.env.example backend/.env
-```
+Create `backend/.env` (see [Environment Variables](#environment-variables) for the required values). Optionally create `frontend/.env` if your backend isn't running on the default `http://localhost:5000/api`.
 
 ### 5. Run the backend server
 
@@ -191,14 +206,20 @@ The frontend will run on `http://localhost:5173` and the backend on `http://loca
 
 ## Environment Variables
 
-Create a `.env` file inside the `backend/` folder. An `.env.example` file is included for reference:
+Create a `.env` file inside the `backend/` folder:
 
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
-RESEND_API_KEY=your_email@gmail.com
+RESEND_API_KEY=your_resend_api_key
 FRONTEND_URL=your_deployed_link
+```
+
+Optionally, create a `.env` file inside the `frontend/` folder if the backend isn't on the default URL:
+
+```env
+VITE_API_URL=http://localhost:5000/api
 ```
 
 ---
@@ -217,13 +238,11 @@ Authorization: Bearer <token>
 |--------|----------|:---:|-------------|
 | `POST` | `/api/auth/register` | ❌ | Register a new user |
 | `POST` | `/api/auth/login` | ❌ | Log in and receive a JWT |
-
-### User Profile
-
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|:---:|-------------|
-| `GET` | `/api/users/profile` | ✅ | Get the current user's profile |
-| `PUT` | `/api/users/profile` | ✅ | Update the current user's profile |
+| `POST` | `/api/auth/forgot-password` | ❌ | Request a password-reset email |
+| `POST` | `/api/auth/reset-password` | ❌ | Reset password using a reset token |
+| `GET` | `/api/auth/profile` | ✅ | Get the current user's profile |
+| `PUT` | `/api/auth/profile` | ✅ | Update the current user's profile (business details, currency, profile picture) |
+| `DELETE` | `/api/auth/profile` | ✅ | Delete the current user's account |
 
 ### Invoices
 
@@ -232,9 +251,26 @@ Authorization: Bearer <token>
 | `GET` | `/api/invoices` | ✅ | Get all invoices for the authenticated user |
 | `POST` | `/api/invoices` | ✅ | Create a new invoice |
 | `GET` | `/api/invoices/:id` | ✅ | Get a single invoice by ID |
-| `PUT` | `/api/invoices/:id` | ✅ | Update an existing invoice |
+| `PUT` | `/api/invoices/:id` | ✅ | Update an invoice (e.g. status: pending / paid / overdue) |
 | `DELETE` | `/api/invoices/:id` | ✅ | Delete an invoice |
 | `POST` | `/api/invoices/:id/send` | ✅ | Generate PDF and send invoice to client email |
+| `POST` | `/api/invoices/pdf` | ❌ | Generate a PDF from draft invoice data (used for preview/download) |
+| `POST` | `/api/invoices/guest-send` | ❌ | Send a one-off invoice by email without an account (rate-limited, nothing is saved) |
+
+### Clients
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|:---:|-------------|
+| `GET` | `/api/clients` | ✅ | Get all clients for the authenticated user |
+| `POST` | `/api/clients` | ✅ | Create a new client |
+| `PUT` | `/api/clients/:id` | ✅ | Update a client |
+| `DELETE` | `/api/clients/:id` | ✅ | Delete a client |
+
+### Search
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|:---:|-------------|
+| `GET` | `/api/search?q=...` | ✅ | Search across the authenticated user's invoices and clients |
 
 ---
 
@@ -244,11 +280,13 @@ Authorization: Bearer <token>
 - REST API development
 - JWT authentication and middleware-protected routes
 - MongoDB schema design with Mongoose
-- Email service integration with Resend
-- PDF generation
-- React state management with Context API
+- Email service integration with Resend, including a password-reset flow
+- Server-side PDF generation with `@react-pdf/renderer`
+- React state management with Context API (auth, clients, invoices, theme)
 - Component-based frontend architecture
-- TypeScript for type-safe frontend development
+- TypeScript for type-safe frontend and backend development
+- Guest checkout flow with usage limits, separate from the authenticated data model
+- Integration and unit testing with Jest (backend) and Vitest (frontend)
 
 ---
 
@@ -258,8 +296,12 @@ Authorization: Bearer <token>
 - Make sure `JWT_SECRET` in your `.env` matches what was used to sign existing tokens. Changing it invalidates all active sessions.
 
 **Emails not sending**
-- Gmail requires an [App Password](https://support.google.com/accounts/answer/185833), not your regular account password. Make sure 2-Step Verification is enabled on your Google account first.
+- Make sure `RESEND_API_KEY` in your `.env` is set to a valid Resend API key.
+- The default `onboarding@resend.dev` sender can only deliver to the email address on your Resend account until you verify a custom domain — verify a domain in the Resend dashboard to send to arbitrary client addresses.
 - Check your spam folder if test emails are not arriving.
+
+**"Share via WhatsApp" doesn't attach the PDF**
+- The invoice PDF is attached automatically only on browsers/devices that support the native file-sharing API (mostly mobile). On desktop browsers without support, the PDF downloads and a WhatsApp chat opens with a text message — attach the downloaded file manually.
 
 **CORS errors in the browser**
 - Confirm the backend is running on the expected port and that your Express CORS configuration allows requests from the frontend origin (e.g. `http://localhost:5173`).
@@ -271,10 +313,16 @@ Authorization: Bearer <token>
 
 ## Future Improvements
 
-- Invoice dashboard with analytics and charts
 - Multiple invoice templates
-- Invoice status tracking (Draft / Sent / Paid / Overdue)
-- Search and filter invoices
+- Recurring / scheduled invoices
+- Multi-currency conversion (currently a display-format setting rather than live conversion)
+- Export invoices/clients to CSV
+
+---
+
+## Contributing
+
+This is primarily a personal/portfolio project, but issues and pull requests are welcome. Please open an issue first to discuss any significant change.
 
 ---
 
