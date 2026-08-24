@@ -79,7 +79,6 @@ export default function InvoicePreview() {
   };
 
   const resetInvoice = () => {
-    localStorage.removeItem("invoice");
     invoiceContext!.setInvoiceData({
       invoiceNo: "",
       form: {

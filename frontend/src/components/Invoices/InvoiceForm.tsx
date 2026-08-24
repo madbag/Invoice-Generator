@@ -72,25 +72,22 @@ export default function CreateInvoice() {
       }
     };
 
-    const saved = localStorage.getItem("invoice");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Invoice date always tracks today — never restore a stale saved date.
-      setInvoiceData({ ...parsed, form: { ...parsed.form, invoiceDate: today } });
-      if (!parsed.invoiceNo) generateInvoiceNo();
-    } else {
-      setInvoiceData({ form: { ...form, invoiceDate: today } });
-      generateInvoiceNo();
-    }
+    // A new invoice always starts blank — never carry over a previous
+    // invoice's client info or line items.
+    setInvoiceData({
+      invoiceNo: "",
+      form: {
+        clientName: "",
+        clientAddress: "",
+        clientEmail: "",
+        contactNumber: "",
+        invoiceDate: today,
+      },
+      items: [{ description: "", quantity: 1, cost: 0 }],
+      total: 0,
+    });
+    generateInvoiceNo();
   }, [token]);
-
-  useEffect(() => {
-    if (!invoiceNo) return;
-    localStorage.setItem(
-      "invoice",
-      JSON.stringify({ invoiceNo, form, items, total: calculateTotal() })
-    );
-  }, [form, items, invoiceNo]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInvoiceData({ form: { ...form, [e.target.name]: e.target.value } });
@@ -170,7 +167,6 @@ export default function CreateInvoice() {
       items: [{ description: "", quantity: 1, cost: 0 }],
       total: 0,
     });
-    localStorage.removeItem("invoice");
     navigate("/dashboard");
   };
 

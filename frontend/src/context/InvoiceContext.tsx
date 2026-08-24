@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState } from "react";
 import type { ReactNode } from "react";
 
 interface InvoiceItem {
@@ -26,23 +26,18 @@ interface InvoiceContextType {
 export const InvoiceContext = createContext<InvoiceContextType | null>(null);
 
 export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
-  const savedInvoice = localStorage.getItem("invoice");
-  const parsedInvoice = savedInvoice ? JSON.parse(savedInvoice) : null;
+  const [invoiceNo, setInvoiceNo] = useState("");
 
-  const [invoiceNo, setInvoiceNo] = useState(parsedInvoice?.invoiceNo || "");
+  const [form, setForm] = useState<InvoiceForm>({
+    clientName: "",
+    clientAddress: "",
+    clientEmail: "",
+    contactNumber: "",
+    invoiceDate: "",
+  });
+  const [items, setItems] = useState<InvoiceItem[]>([]);
 
-  const [form, setForm] = useState<InvoiceForm>(
-    parsedInvoice?.form || {
-      clientName: "",
-      clientAddress: "",
-      clientEmail: "",
-      contactNumber: "",
-      invoiceDate: "",
-    },
-  );
-  const [items, setItems] = useState<InvoiceItem[]>(parsedInvoice?.items || []);
-
-  const [total, setTotal] = useState(parsedInvoice?.total || 0);
+  const [total, setTotal] = useState(0);
 
   const setInvoiceData = (data: Partial<InvoiceContextType>) => {
     if (data.invoiceNo !== undefined) setInvoiceNo(data.invoiceNo);
@@ -51,10 +46,6 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
     if (data.total !== undefined) setTotal(data.total);
   };
 
-  useEffect(() => {
-    const invoiceData = { invoiceNo, form, items, total };
-    localStorage.setItem("invoice", JSON.stringify(invoiceData));
-  }, [invoiceNo, form, items, total]);
   return (
     <InvoiceContext.Provider
       value={{ invoiceNo, form, items, total, setInvoiceData }}

@@ -97,7 +97,6 @@ export default function DashboardHome() {
 
 
   const handleNewInvoice = () => {
-    localStorage.removeItem("invoice");
     navigate("/dashboard/create-invoice");
   };
 
